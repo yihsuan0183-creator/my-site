@@ -3,53 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>我的記錄本</title>
-  <!-- 引入 Supabase 套件 -->
+  <title>我的百科</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* ===== CSS 樣式 ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: #f5f6f8; color: #333; }
+    body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: #f8f9fa; color: #202122; display: flex; height: 100vh; overflow: hidden; }
     .hidden { display: none !important; }
 
-    /* 登入畫面 */
-    .auth-view { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2932e1, #4e6ef2); padding: 20px; }
-    .auth-card { background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; }
-    .auth-card h1 { text-align: center; font-size: 1.5rem; }
-    .auth-card .sub { text-align: center; color: #888; font-size: .9rem; margin-bottom: 8px; }
-    .auth-card input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
-    .auth-card button { padding: 12px; background: #4e6ef2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
-    .auth-card button.ghost { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; }
-    .auth-card .msg { text-align: center; font-size: .85rem; color: #e33; min-height: 1em; }
+    /* 登入畫面 (維持不變) */
+    .auth-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f8f9fa; z-index: 1000; }
+    .auth-card { background: #fff; border: 1px solid #a2a9b1; border-radius: 4px; padding: 32px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 16px; }
+    .auth-card h1 { text-align: center; font-size: 1.8rem; font-family: "Times New Roman", serif; border-bottom: 1px solid #a2a9b1; padding-bottom: 10px; }
+    .auth-card input { padding: 10px; border: 1px solid #a2a9b1; border-radius: 2px; font-size: 1rem; }
+    .auth-card button { padding: 10px; background: #3366cc; color: #fff; border: none; border-radius: 2px; cursor: pointer; font-size: 1rem; }
+    .auth-card button.ghost { background: #fff; color: #3366cc; border: 1px solid #3366cc; }
+    .auth-card .msg { text-align: center; font-size: .85rem; color: #d33; min-height: 1em; }
 
-    /* 主畫面 */
-    .topbar { display: flex; justify-content: space-between; align-items: center; max-width: 900px; margin: 0 auto 24px; }
-    .topbar h1 { font-size: 1.8rem; }
-    .logout { background: rgba(255,255,255,.2); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-    .logout:hover { background: rgba(255,255,255,.35); }
-    .hero { background: linear-gradient(135deg, #2932e1, #4e6ef2); color: #fff; padding: 40px 20px; text-align: center; }
-    .search-box { max-width: 600px; margin: 0 auto; }
-    .search-box input { width: 100%; border: none; padding: 14px 18px; font-size: 1rem; border-radius: 8px; outline: none; }
-
-    main { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
-    .add-section, #listSection { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-    h2 { font-size: 1.2rem; margin-bottom: 16px; }
-
-    #addForm { display: flex; flex-direction: column; gap: 10px; }
-    #addForm input, #addForm select, #addForm textarea { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; font-family: inherit; }
-    #addForm button { padding: 12px; background: #4e6ef2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
-    #addForm button:hover { background: #3a56d4; }
-    #addForm button:disabled { background: #aab8f5; cursor: not-allowed; }
-
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
-    .card { background: #fafbff; border: 1px solid #e8ebf5; border-radius: 8px; padding: 14px; position: relative; }
-    .card .tag { display: inline-block; font-size: .75rem; background: #e6ecff; color: #4e6ef2; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
-    .card h3 { font-size: 1rem; margin-bottom: 6px; word-break: break-word; }
-    .card p { font-size: .9rem; color: #666; white-space: pre-wrap; word-break: break-word; }
-    .card .date { font-size: .75rem; color: #aaa; margin-top: 8px; }
-    .card .del { position: absolute; top: 8px; right: 8px; border: none; background: transparent; color: #ccc; cursor: pointer; font-size: 1rem; }
-    .card .del:hover { color: #e33; }
-    .empty { text-align: center; color: #aaa; padding: 20px; }
+    /* 側邊欄 (目錄) */
+    .sidebar { width: 250px; background: #fff; border-right: 1px solid #a2a9b1; display: flex; flex-direction: column; }
+    .sidebar-header { padding: 15px; border-bottom: 1px solid #a2a9b1; background: #f8f9fa; display: flex; justify-content: space-between; align-items: center; }
+    .sidebar-header h2 { font-size: 1.2rem; font-family: "Times New Roman", serif; }
+    .sidebar-search { padding: 10px; border-bottom: 1px solid #eaecf0; }
+    .sidebar-search input { width: 100%; padding: 8px; border: 1px solid #a2a9b1; border-radius: 2px; }
+    .nav-list { flex: 1; overflow-y: auto; padding: 10px; }
+    .nav-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eaecf0; font-size: 0.95rem; color: #3366cc; }
+    .nav-item:hover { background: #eaecf0; text-decoration: underline; }
+    
+    /* 主內容區 (文章閱讀) */
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; background: #fff; padding: 20px 40px; }
+    .article { max-width: 800px; margin: 0 auto; width: 100%; }
+    .article h1 { font-family: "Times New Roman", serif; font-size: 2.2rem; font-weight: normal; border-bottom: 1px solid #a2a9b1; padding-bottom: 5px; margin-bottom: 15px; }
+    .article .meta { font-size: 0.85rem; color: #54595d; margin-bottom: 20px; font-style: italic; }
+    .article-content { font-size: 1rem; line-height: 1.8; white-space: pre-wrap; margin-bottom: 30px; }
+    
+    /* 編輯區塊 */
+    .editor { border: 1px solid #a2a9b1; background: #f8f9fa; padding: 20px; border-radius: 2px; margin-top: 20px; }
+    .editor input, .editor select, .editor textarea { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #a2a9b1; font-family: inherit; font-size: 1rem; }
+    .editor textarea { min-height: 300px; line-height: 1.6; resize: vertical; }
+    .btn-group { display: flex; gap: 10px; }
+    .btn-primary { background: #3366cc; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 2px; }
+    .btn-secondary { background: #fff; color: #333; border: 1px solid #a2a9b1; padding: 10px 20px; cursor: pointer; border-radius: 2px; }
+    .btn-danger { background: #d33; color: #fff; border: none; padding: 10px 20px; cursor: pointer; border-radius: 2px; }
+    
+    .welcome-screen { text-align: center; margin-top: 100px; color: #54595d; }
+    .welcome-screen h1 { font-family: "Times New Roman", serif; font-size: 2.5rem; margin-bottom: 10px; font-weight: normal; }
   </style>
 </head>
 <body>
@@ -57,194 +54,234 @@
   <!-- 登入畫面 -->
   <div id="authView" class="auth-view hidden">
     <div class="auth-card">
-      <h1>我的記錄本</h1>
-      <p class="sub">登入後跨裝置同步</p>
+      <h1>我的百科</h1>
       <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="密碼（至少 6 碼）">
+      <input type="password" id="password" placeholder="密碼">
       <button id="loginBtn">登入</button>
-      <button id="signupBtn" class="ghost">註冊新帳號</button>
+      <button id="signupBtn" class="ghost">註冊</button>
       <p id="authMsg" class="msg"></p>
     </div>
   </div>
 
-  <!-- 主畫面 -->
-  <div id="mainView" class="hidden">
-    <header class="hero">
-      <div class="topbar">
-        <h1>我的記錄本</h1>
-        <button id="logoutBtn" class="logout">登出</button>
+  <!-- 主程式 -->
+  <div id="mainView" class="hidden" style="display: flex; width: 100%; height: 100%;">
+    <!-- 左側目錄 -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>目錄</h2>
+        <button id="newEntryBtn" class="btn-primary" style="padding: 5px 10px; font-size: 0.8rem;">+ 新增</button>
       </div>
-      <div class="search-box">
-        <input type="text" id="searchInput" placeholder="搜尋記錄...">
+      <div class="sidebar-search">
+        <input type="text" id="searchInput" placeholder="搜尋條目...">
       </div>
-    </header>
+      <div class="nav-list" id="navList"></div>
+      <div style="padding: 15px; border-top: 1px solid #a2a9b1;">
+        <button id="logoutBtn" class="btn-secondary" style="width: 100%;">登出</button>
+      </div>
+    </div>
 
-    <main>
-      <section class="add-section">
-        <h2>新增記錄</h2>
-        <form id="addForm">
-          <input type="text" id="title" placeholder="標題" required>
-          <select id="category">
-            <option value="筆記">筆記</option>
-            <option value="待辦">待辦</option>
-            <option value="靈感">靈感</option>
-            <option value="連結">連結</option>
+    <!-- 右側內容 -->
+    <div class="main-content" id="mainContent">
+      <!-- 預設畫面 -->
+      <div id="welcomeScreen" class="welcome-screen">
+        <h1>我的百科全書</h1>
+        <p>請從左側目錄選擇一個條目，或點擊「新增」來建立知識庫。</p>
+      </div>
+
+      <!-- 閱讀模式 -->
+      <div id="viewer" class="article hidden">
+        <h1 id="viewTitle"></h1>
+        <div class="meta">分類：<span id="viewCategory"></span> ｜ 最後更新：<span id="viewDate"></span></div>
+        <div class="article-content" id="viewContent"></div>
+        <div class="btn-group">
+          <button id="editBtn" class="btn-primary">編輯此條目</button>
+          <button id="deleteBtn" class="btn-danger">刪除</button>
+        </div>
+      </div>
+
+      <!-- 編輯模式 -->
+      <div id="editor" class="article hidden">
+        <h1 id="editorTitle">建立新條目</h1>
+        <div class="editor">
+          <input type="text" id="editTitle" placeholder="條目名稱 (標題)">
+          <select id="editCategory">
+            <option value="人物">人物</option>
+            <option value="歷史">歷史</option>
+            <option value="科技">科技</option>
+            <option value="地理">地理</option>
+            <option value="文化">文化</option>
+            <option value="其他">其他</option>
           </select>
-          <textarea id="content" placeholder="內容..." rows="3" required></textarea>
-          <button type="submit">新增</button>
-        </form>
-      </section>
-
-      <section id="listSection">
-        <h2>所有記錄 <span id="count"></span></h2>
-        <div id="recordList" class="card-grid"></div>
-        <p id="emptyMsg" class="empty">還沒有記錄，新增一筆吧！</p>
-      </section>
-    </main>
+          <textarea id="editContent" placeholder="在這裡輸入百科內容，支援換行..."></textarea>
+          <div class="btn-group">
+            <button id="saveBtn" class="btn-primary">儲存條目</button>
+            <button id="cancelBtn" class="btn-secondary">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // ===== 這裡已經填好你的 Supabase 資訊了 =====
     const SUPABASE_URL = 'https://vshfxcygviqsxxnanxzd.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0'; 
 
-    // 初始化連線
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true }
     });
 
-    // DOM 元素
+    // DOM
     const authView = document.getElementById('authView');
     const mainView = document.getElementById('mainView');
-    const authMsg = document.getElementById('authMsg');
-    const listEl = document.getElementById('recordList');
-    const emptyMsg = document.getElementById('emptyMsg');
-    const countEl = document.getElementById('count');
+    const navList = document.getElementById('navList');
+    const viewer = document.getElementById('viewer');
+    const editor = document.getElementById('editor');
+    const welcomeScreen = document.getElementById('welcomeScreen');
 
     let records = [];
+    let currentId = null; // 目前正在看的條目 ID
     let keyword = '';
 
-    // 切換畫面
+    // 畫面切換
     function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
     function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
 
-    // ===== 登入 / 註冊 / 登出 =====
+    // 登入/註冊/登出
     document.getElementById('loginBtn').onclick = async () => {
-      authMsg.textContent = '';
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      if (!email || !password) { authMsg.textContent = '請輸入 Email 和密碼'; return; }
-
       const { error } = await db.auth.signInWithPassword({ email, password });
-      if (error) {
-        authMsg.textContent = '登入失敗：' + error.message;
-      } else {
-        showMain();
-        loadRecords();
-      }
+      if (error) document.getElementById('authMsg').textContent = error.message;
+      else { showMain(); loadRecords(); }
     };
-
     document.getElementById('signupBtn').onclick = async () => {
-      authMsg.textContent = '';
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      if (!email || password.length < 6) { authMsg.textContent = 'Email 必填，密碼至少 6 碼'; return; }
-
       const { error } = await db.auth.signUp({ email, password });
-      if (error) {
-        authMsg.textContent = '註冊失敗：' + error.message;
-      } else {
-        authMsg.style.color = '#4e6ef2';
-        authMsg.textContent = '註冊成功！請直接點擊「登入」。';
-      }
+      if (error) document.getElementById('authMsg').textContent = error.message;
+      else document.getElementById('authMsg').textContent = '註冊成功，請登入。';
     };
+    document.getElementById('logoutBtn').onclick = async () => { await db.auth.signOut(); showAuth(); };
 
-    document.getElementById('logoutBtn').onclick = async () => {
-      await db.auth.signOut();
-      records = [];
-      showAuth();
-    };
-
-    // ===== 資料庫讀寫 =====
+    // 資料庫
     async function loadRecords() {
-      const { data, error } = await db
-        .from('records')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) { console.error(error); return; }
-      records = data;
-      render();
+      const { data, error } = await db.from('records').select('*').order('created_at', { ascending: false });
+      if (!error) { records = data; renderNav(); }
     }
 
-    async function addRecord(title, category, content) {
-      const { data: { user } } = await db.auth.getUser();
-      const { data, error } = await db
-        .from('records')
-        .insert({ user_id: user.id, title, category, content })
-        .select()
-        .single();
-      if (error) { alert('新增失敗：' + error.message); return; }
-      records.unshift(data);
-      render();
-    }
-
-    async function deleteRecord(id) {
-      const { error } = await db.from('records').delete().eq('id', id);
-      if (error) { alert('刪除失敗：' + error.message); return; }
-      records = records.filter(r => r.id !== id);
-      render();
-    }
-
-    // ===== 畫面渲染 =====
-    function render() {
-      const filtered = records.filter(r =>
-        (r.title + r.content + r.category).toLowerCase().includes(keyword.toLowerCase())
-      );
-      listEl.innerHTML = '';
-      countEl.textContent = `(${filtered.length})`;
-      emptyMsg.style.display = filtered.length ? 'none' : 'block';
+    // 渲染左側目錄
+    function renderNav() {
+      navList.innerHTML = '';
+      const filtered = records.filter(r => r.title.toLowerCase().includes(keyword.toLowerCase()));
+      
+      if (filtered.length === 0) {
+        navList.innerHTML = '<div style="padding: 10px; color: #666; font-size: 0.9rem;">沒有符合的條目</div>';
+        return;
+      }
 
       filtered.forEach(r => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-          <button class="del" data-id="${r.id}">✕</button>
-          <span class="tag">${r.category}</span>
-          <h3></h3>
-          <p></p>
-          <div class="date">${new Date(r.created_at).toLocaleString('zh-TW')}</div>
-        `;
-        card.querySelector('h3').textContent = r.title;
-        card.querySelector('p').textContent = r.content;
-        listEl.appendChild(card);
+        const div = document.createElement('div');
+        div.className = 'nav-item';
+        div.textContent = r.title;
+        div.onclick = () => viewRecord(r.id);
+        navList.appendChild(div);
       });
     }
 
-    // ===== 事件監聽 =====
-    document.getElementById('addForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button[type=submit]');
-      const title = document.getElementById('title').value.trim();
-      const category = document.getElementById('category').value;
-      const content = document.getElementById('content').value.trim();
-      if (!title || !content) return;
+    // 查看條目
+    function viewRecord(id) {
+      const r = records.find(x => x.id === id);
+      if (!r) return;
+      currentId = id;
+      
+      document.getElementById('viewTitle').textContent = r.title;
+      document.getElementById('viewCategory').textContent = r.category;
+      document.getElementById('viewDate').textContent = new Date(r.created_at).toLocaleString('zh-TW');
+      document.getElementById('viewContent').textContent = r.content;
 
-      btn.disabled = true;
-      await addRecord(title, category, content);
-      btn.disabled = false;
-      e.target.reset();
-    });
+      welcomeScreen.classList.add('hidden');
+      editor.classList.add('hidden');
+      viewer.classList.remove('hidden');
+    }
 
-    listEl.addEventListener('click', e => {
-      if (e.target.classList.contains('del')) deleteRecord(e.target.dataset.id);
-    });
+    // 點擊「新增」按鈕
+    document.getElementById('newEntryBtn').onclick = () => {
+      currentId = null;
+      document.getElementById('editorTitle').textContent = '建立新條目';
+      document.getElementById('editTitle').value = '';
+      document.getElementById('editCategory').value = '其他';
+      document.getElementById('editContent').value = '';
+      
+      welcomeScreen.classList.add('hidden');
+      viewer.classList.add('hidden');
+      editor.classList.remove('hidden');
+    };
 
+    // 點擊「編輯」按鈕
+    document.getElementById('editBtn').onclick = () => {
+      const r = records.find(x => x.id === currentId);
+      if (!r) return;
+      document.getElementById('editorTitle').textContent = '編輯條目：' + r.title;
+      document.getElementById('editTitle').value = r.title;
+      document.getElementById('editCategory').value = r.category;
+      document.getElementById('editContent').value = r.content;
+
+      viewer.classList.add('hidden');
+      editor.classList.remove('hidden');
+    };
+
+    // 取消編輯
+    document.getElementById('cancelBtn').onclick = () => {
+      if (currentId) viewRecord(currentId);
+      else { welcomeScreen.classList.remove('hidden'); editor.classList.add('hidden'); }
+    };
+
+    // 儲存條目 (新增或更新)
+    document.getElementById('saveBtn').onclick = async () => {
+      const title = document.getElementById('editTitle').value.trim();
+      const category = document.getElementById('editCategory').value;
+      const content = document.getElementById('editContent').value.trim();
+      if (!title || !content) { alert('請填寫標題與內容'); return; }
+
+      if (currentId) {
+        // 更新
+        const { error } = await db.from('records').update({ title, category, content }).eq('id', currentId);
+        if (error) { alert('更新失敗：' + error.message); return; }
+        const idx = records.findIndex(x => x.id === currentId);
+        records[idx] = { ...records[idx], title, category, content };
+      } else {
+        // 新增
+        const { data: { user } } = await db.auth.getUser();
+        const { data, error } = await db.from('records').insert({ user_id: user.id, title, category, content }).select().single();
+        if (error) { alert('新增失敗：' + error.message); return; }
+        records.unshift(data);
+        currentId = data.id;
+      }
+      
+      renderNav();
+      viewRecord(currentId);
+    };
+
+    // 刪除
+    document.getElementById('deleteBtn').onclick = async () => {
+      if (!confirm('確定要刪除這個條目嗎？')) return;
+      const { error } = await db.from('records').delete().eq('id', currentId);
+      if (error) { alert('刪除失敗：' + error.message); return; }
+      
+      records = records.filter(x => x.id !== currentId);
+      currentId = null;
+      renderNav();
+      viewer.classList.add('hidden');
+      welcomeScreen.classList.remove('hidden');
+    };
+
+    // 搜尋
     document.getElementById('searchInput').addEventListener('input', e => {
       keyword = e.target.value;
-      render();
+      renderNav();
     });
 
-    // ===== 啟動 =====
+    // 啟動
     (async () => {
       const { data: { session } } = await db.auth.getSession();
       if (session) { showMain(); loadRecords(); }
