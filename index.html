@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的記錄本</title>
+  <!-- 引入 Supabase 套件 -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    /* ===== CSS 樣式 ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: #f5f6f8; color: #333; }
+    .hidden { display: none !important; }
+
+    /* 登入畫面 */
+    .auth-view { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #2932e1, #4e6ef2); padding: 20px; }
+    .auth-card { background: #fff; border-radius: 12px; padding: 32px; width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; }
+    .auth-card h1 { text-align: center; font-size: 1.5rem; }
+    .auth-card .sub { text-align: center; color: #888; font-size: .9rem; margin-bottom: 8px; }
+    .auth-card input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+    .auth-card button { padding: 12px; background: #4e6ef2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+    .auth-card button.ghost { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; }
+    .auth-card .msg { text-align: center; font-size: .85rem; color: #e33; min-height: 1em; }
+
+    /* 主畫面 */
+    .topbar { display: flex; justify-content: space-between; align-items: center; max-width: 900px; margin: 0 auto 24px; }
+    .topbar h1 { font-size: 1.8rem; }
+    .logout { background: rgba(255,255,255,.2); color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+    .logout:hover { background: rgba(255,255,255,.35); }
+    .hero { background: linear-gradient(135deg, #2932e1, #4e6ef2); color: #fff; padding: 40px 20px; text-align: center; }
+    .search-box { max-width: 600px; margin: 0 auto; }
+    .search-box input { width: 100%; border: none; padding: 14px 18px; font-size: 1rem; border-radius: 8px; outline: none; }
+
+    main { max-width: 900px; margin: 0 auto; padding: 30px 20px; }
+    .add-section, #listSection { background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+    h2 { font-size: 1.2rem; margin-bottom: 16px; }
+
+    #addForm { display: flex; flex-direction: column; gap: 10px; }
+    #addForm input, #addForm select, #addForm textarea { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: .95rem; font-family: inherit; }
+    #addForm button { padding: 12px; background: #4e6ef2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+    #addForm button:hover { background: #3a56d4; }
+    #addForm button:disabled { background: #aab8f5; cursor: not-allowed; }
+
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .card { background: #fafbff; border: 1px solid #e8ebf5; border-radius: 8px; padding: 14px; position: relative; }
+    .card .tag { display: inline-block; font-size: .75rem; background: #e6ecff; color: #4e6ef2; padding: 2px 8px; border-radius: 10px; margin-bottom: 8px; }
+    .card h3 { font-size: 1rem; margin-bottom: 6px; word-break: break-word; }
+    .card p { font-size: .9rem; color: #666; white-space: pre-wrap; word-break: break-word; }
+    .card .date { font-size: .75rem; color: #aaa; margin-top: 8px; }
+    .card .del { position: absolute; top: 8px; right: 8px; border: none; background: transparent; color: #ccc; cursor: pointer; font-size: 1rem; }
+    .card .del:hover { color: #e33; }
+    .empty { text-align: center; color: #aaa; padding: 20px; }
+  </style>
+</head>
+<body>
+
+  <!-- 登入畫面 -->
+  <div id="authView" class="auth-view hidden">
+    <div class="auth-card">
+      <h1>我的記錄本</h1>
+      <p class="sub">登入後跨裝置同步</p>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="密碼（至少 6 碼）">
+      <button id="loginBtn">登入</button>
+      <button id="signupBtn" class="ghost">註冊新帳號</button>
+      <p id="authMsg" class="msg"></p>
+    </div>
+  </div>
+
+  <!-- 主畫面 -->
+  <div id="mainView" class="hidden">
+    <header class="hero">
+      <div class="topbar">
+        <h1>我的記錄本</h1>
+        <button id="logoutBtn" class="logout">登出</button>
+      </div>
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="搜尋記錄...">
+      </div>
+    </header>
+
+    <main>
+      <section class="add-section">
+        <h2>新增記錄</h2>
+        <form id="addForm">
+          <input type="text" id="title" placeholder="標題" required>
+          <select id="category">
+            <option value="筆記">筆記</option>
+            <option value="待辦">待辦</option>
+            <option value="靈感">靈感</option>
+            <option value="連結">連結</option>
+          </select>
+          <textarea id="content" placeholder="內容..." rows="3" required></textarea>
+          <button type="submit">新增</button>
+        </form>
+      </section>
+
+      <section id="listSection">
+        <h2>所有記錄 <span id="count"></span></h2>
+        <div id="recordList" class="card-grid"></div>
+        <p id="emptyMsg" class="empty">還沒有記錄，新增一筆吧！</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // ===== 這裡已經填好你的 Supabase 資訊了 =====
+    const SUPABASE_URL = 'https://vshfxcygviqsxxnanxzd.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0'; 
+
+    // 初始化連線
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+
+    // DOM 元素
+    const authView = document.getElementById('authView');
+    const mainView = document.getElementById('mainView');
+    const authMsg = document.getElementById('authMsg');
+    const listEl = document.getElementById('recordList');
+    const emptyMsg = document.getElementById('emptyMsg');
+    const countEl = document.getElementById('count');
+
+    let records = [];
+    let keyword = '';
+
+    // 切換畫面
+    function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
+    function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
+
+    // ===== 登入 / 註冊 / 登出 =====
+    document.getElementById('loginBtn').onclick = async () => {
+      authMsg.textContent = '';
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || !password) { authMsg.textContent = '請輸入 Email 和密碼'; return; }
+
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      if (error) {
+        authMsg.textContent = '登入失敗：' + error.message;
+      } else {
+        showMain();
+        loadRecords();
+      }
+    };
+
+    document.getElementById('signupBtn').onclick = async () => {
+      authMsg.textContent = '';
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      if (!email || password.length < 6) { authMsg.textContent = 'Email 必填，密碼至少 6 碼'; return; }
+
+      const { error } = await db.auth.signUp({ email, password });
+      if (error) {
+        authMsg.textContent = '註冊失敗：' + error.message;
+      } else {
+        authMsg.style.color = '#4e6ef2';
+        authMsg.textContent = '註冊成功！請直接點擊「登入」。';
+      }
+    };
+
+    document.getElementById('logoutBtn').onclick = async () => {
+      await db.auth.signOut();
+      records = [];
+      showAuth();
+    };
+
+    // ===== 資料庫讀寫 =====
+    async function loadRecords() {
+      const { data, error } = await db
+        .from('records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) { console.error(error); return; }
+      records = data;
+      render();
+    }
+
+    async function addRecord(title, category, content) {
+      const { data: { user } } = await db.auth.getUser();
+      const { data, error } = await db
+        .from('records')
+        .insert({ user_id: user.id, title, category, content })
+        .select()
+        .single();
+      if (error) { alert('新增失敗：' + error.message); return; }
+      records.unshift(data);
+      render();
+    }
+
+    async function deleteRecord(id) {
+      const { error } = await db.from('records').delete().eq('id', id);
+      if (error) { alert('刪除失敗：' + error.message); return; }
+      records = records.filter(r => r.id !== id);
+      render();
+    }
+
+    // ===== 畫面渲染 =====
+    function render() {
+      const filtered = records.filter(r =>
+        (r.title + r.content + r.category).toLowerCase().includes(keyword.toLowerCase())
+      );
+      listEl.innerHTML = '';
+      countEl.textContent = `(${filtered.length})`;
+      emptyMsg.style.display = filtered.length ? 'none' : 'block';
+
+      filtered.forEach(r => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <button class="del" data-id="${r.id}">✕</button>
+          <span class="tag">${r.category}</span>
+          <h3></h3>
+          <p></p>
+          <div class="date">${new Date(r.created_at).toLocaleString('zh-TW')}</div>
+        `;
+        card.querySelector('h3').textContent = r.title;
+        card.querySelector('p').textContent = r.content;
+        listEl.appendChild(card);
+      });
+    }
+
+    // ===== 事件監聽 =====
+    document.getElementById('addForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type=submit]');
+      const title = document.getElementById('title').value.trim();
+      const category = document.getElementById('category').value;
+      const content = document.getElementById('content').value.trim();
+      if (!title || !content) return;
+
+      btn.disabled = true;
+      await addRecord(title, category, content);
+      btn.disabled = false;
+      e.target.reset();
+    });
+
+    listEl.addEventListener('click', e => {
+      if (e.target.classList.contains('del')) deleteRecord(e.target.dataset.id);
+    });
+
+    document.getElementById('searchInput').addEventListener('input', e => {
+      keyword = e.target.value;
+      render();
+    });
+
+    // ===== 啟動 =====
+    (async () => {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) { showMain(); loadRecords(); }
+      else showAuth();
+    })();
+  </script>
+</body>
+</html>
