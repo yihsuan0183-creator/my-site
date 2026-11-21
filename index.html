@@ -5,75 +5,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的百科</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- 引入 Markdown 解析器 -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
+    /* ===== 百度百科配色與排版 ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
-    body { font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; background: #f5f6f8; color: #333; display: flex; height: 100vh; overflow: hidden; }
+    body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     .hidden { display: none !important; }
 
     /* 登入畫面 */
     .auth-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f5f6f8; z-index: 1000; }
-    .auth-card { background: #fff; border-radius: 8px; padding: 32px; width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .auth-card h1 { text-align: center; color: #2932e1; }
-    .auth-card input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
-    .auth-card button { padding: 12px; background: #4e6ef2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
+    .auth-card { background: #fff; border-radius: 4px; padding: 30px; width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .auth-card h1 { text-align: center; color: #2932e1; font-size: 1.5rem; }
+    .auth-card input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .auth-card button { padding: 10px; background: #4e6ef2; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
     .auth-card button.ghost { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; }
 
-    /* 頂部導航 */
-    .top-navbar { position: fixed; top: 0; left: 0; width: 100%; height: 56px; background: #fff; border-bottom: 1px solid #eee; display: flex; align-items: center; padding: 0 20px; z-index: 100; }
-    .top-navbar h1 { font-size: 1.2rem; color: #2932e1; margin-right: 20px; }
-    .top-navbar .search-bar { flex: 1; max-width: 400px; }
-    .top-navbar .search-bar input { width: 100%; padding: 8px 12px; border: 1px solid #ccd0d9; border-radius: 4px; }
-    .top-navbar .actions { margin-left: auto; display: flex; gap: 10px; }
+    /* 百度頂部導航列 */
+    .top-navbar { height: 56px; background: #fff; border-bottom: 1px solid #ebebeb; display: flex; align-items: center; padding: 0 24px; z-index: 100; }
+    .top-navbar .logo { font-size: 1.4rem; font-weight: bold; color: #2932e1; margin-right: 30px; letter-spacing: 1px; }
+    .top-navbar .search-box { display: flex; align-items: center; width: 400px; }
+    .top-navbar .search-box input { flex: 1; padding: 8px 12px; border: 1px solid #ccd0d9; border-right: none; border-radius: 4px 0 0 4px; outline: none; }
+    .top-navbar .search-box button { padding: 8px 20px; background: #4e6ef2; color: #fff; border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
+    .top-navbar .actions { margin-left: auto; display: flex; gap: 12px; }
+    .btn { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.9rem; }
+    .btn-primary { background: #4e6ef2; color: #fff; }
+    .btn-outline { background: #fff; border: 1px solid #ccd0d9; color: #333; }
+    .btn-danger { background: #f33; color: #fff; }
 
     /* 主佈局 */
-    .layout { display: flex; width: 100%; height: 100%; padding-top: 56px; }
+    .layout { display: flex; flex: 1; overflow: hidden; background: #fff; }
     
-    /* 左側目錄 (百科樣式) */
-    .sidebar { width: 260px; background: #fff; border-right: 1px solid #eee; overflow-y: auto; padding: 20px 0; }
-    .sidebar-title { padding: 0 20px 10px; font-size: 0.9rem; color: #999; font-weight: bold; }
-    
-    /* 文章目錄清單 */
+    /* 左側目錄 (百度百科樣式) */
+    .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #ebebeb; overflow-y: auto; padding: 15px 0; }
+    .sidebar-title { padding: 0 20px 10px; font-size: 1rem; font-weight: bold; color: #333; }
     .toc-list { list-style: none; padding: 0; margin: 0; }
-    .toc-item { cursor: pointer; color: #333; padding: 6px 20px; font-size: 0.9rem; line-height: 1.4; border-left: 3px solid transparent; }
-    .toc-item:hover { background: #f0f4ff; color: #4e6ef2; }
+    .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.9rem; line-height: 1.4; border-left: 3px solid transparent; }
+    .toc-item:hover { background: #eef1f6; color: #4e6ef2; }
     .toc-item.h2 { font-weight: bold; }
     .toc-item.h3 { padding-left: 35px; font-size: 0.85rem; color: #666; }
-    
-    /* 分隔線 */
-    .divider { height: 1px; background: #eee; margin: 15px 20px; }
 
     /* 右側內容區 */
     .main-content { flex: 1; overflow-y: auto; background: #fff; padding: 30px 40px; position: relative; }
     .article-container { max-width: 900px; margin: 0 auto; }
     
-    /* 文章標題區 */
-    .article-header { border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
-    .article-header h1 { font-size: 2.2rem; font-weight: normal; margin-bottom: 10px; }
-    .article-meta { font-size: 0.85rem; color: #999; }
-    .article-meta span { margin-right: 15px; }
+    /* 百度百科文章標題區 */
+    .article-header { margin-bottom: 20px; position: relative; }
+    .article-header h1 { font-size: 2.2rem; font-weight: bold; color: #222; margin-bottom: 8px; display: inline-block; }
+    .article-subtitle { font-size: 1rem; color: #666; margin-bottom: 10px; }
+    .article-meta-bar { font-size: 0.8rem; color: #999; border-bottom: 1px solid #ebebeb; padding-bottom: 15px; display: flex; gap: 15px; }
+    .article-meta-bar span { cursor: pointer; }
+    .article-meta-bar span:hover { color: #4e6ef2; }
 
-    /* Markdown 渲染樣式 (模擬百科段落標題) */
-    .article-body { font-size: 1rem; line-height: 1.8; color: #333; }
-    .article-body h2 { font-size: 1.4rem; border-bottom: 1px solid #eee; padding-bottom: 10px; margin: 30px 0 15px; font-weight: bold; color: #222; }
-    .article-body h3 { font-size: 1.2rem; margin: 20px 0 10px; font-weight: bold; }
+    /* 百度百科正文排版 */
+    .article-body { font-size: 1rem; line-height: 1.8; color: #222; margin-top: 20px; }
+    
+    /* 自動生成的標題 (帶藍色左邊框與數字) */
+    .article-body h2 { font-size: 1.4rem; font-weight: bold; margin: 30px 0 15px; padding-left: 10px; border-left: 4px solid #4e6ef2; line-height: 1.2; }
+    .article-body h3 { font-size: 1.1rem; font-weight: bold; margin: 20px 0 10px; }
+    
     .article-body p { margin-bottom: 15px; text-align: justify; }
     .article-body ul, .article-body ol { margin-left: 20px; margin-bottom: 15px; }
     .article-body li { margin-bottom: 8px; }
-    .article-body a { color: #3366cc; text-decoration: none; }
-    .article-body a:hover { text-decoration: underline; }
+    .article-body a { color: #4e6ef2; text-decoration: none; }
+    
+    /* 表格樣式 */
+    .article-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; }
+    .article-body th, .article-body td { border: 1px solid #ebebeb; padding: 10px 12px; text-align: left; }
+    .article-body th { background-color: #f8f9fa; font-weight: bold; }
 
     /* 編輯器 */
-    .editor-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-top: 20px; }
-    .editor-box input, .editor-box textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; font-family: monospace; font-size: 0.95rem; }
+    .editor-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-top: 20px; }
+    .editor-box input, .editor-box textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 0.95rem; }
     .editor-box textarea { min-height: 400px; line-height: 1.6; resize: vertical; }
-    
-    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.95rem; }
-    .btn-primary { background: #4e6ef2; color: #fff; }
-    .btn-danger { background: #ff4d4f; color: #fff; }
-    .btn-outline { background: #fff; border: 1px solid #ddd; color: #333; }
-    .btn:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -86,17 +89,18 @@
       <input type="password" id="password" placeholder="密碼">
       <button id="loginBtn">登入</button>
       <button id="signupBtn" class="ghost">註冊</button>
-      <p id="authMsg" style="color:#ff4d4f; font-size:0.85rem; text-align:center;"></p>
+      <p id="authMsg" style="color:#f33; font-size:0.85rem; text-align:center;"></p>
     </div>
   </div>
 
   <!-- 主程式 -->
-  <div id="mainView" class="hidden" style="width: 100%; height: 100%;">
+  <div id="mainView" class="hidden" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
     <!-- 頂部導航 -->
     <div class="top-navbar">
-      <h1>我的百科</h1>
-      <div class="search-bar">
+      <div class="logo">我的百科</div>
+      <div class="search-box">
         <input type="text" id="searchInput" placeholder="搜尋百科條目...">
+        <button>搜尋</button>
       </div>
       <div class="actions">
         <button id="newEntryBtn" class="btn btn-primary">+ 新增條目</button>
@@ -109,12 +113,11 @@
       <!-- 左側目錄 -->
       <div class="sidebar">
         <div id="articleListContainer">
-          <div class="sidebar-title">所有條目</div>
-          <div id="navList"></div>
-          <div class="divider"></div>
+          <div class="sidebar-title">目錄</div>
+          <div id="navList" class="toc-list"></div>
         </div>
         
-        <div id="tocContainer" class="hidden">
+        <div id="tocContainer" class="hidden" style="margin-top: 20px; border-top: 1px solid #ebebeb; padding-top: 15px;">
           <div class="sidebar-title">本頁目錄</div>
           <ul class="toc-list" id="tocList"></ul>
         </div>
@@ -131,13 +134,14 @@
         <div id="viewer" class="article-container hidden">
           <div class="article-header">
             <h1 id="viewTitle"></h1>
-            <div class="article-meta">
+            <div class="article-subtitle" id="viewSubtitle"></div>
+            <div class="article-meta-bar">
               <span id="viewCategory"></span>
               <span>最後編輯：<span id="viewDate"></span></span>
             </div>
           </div>
           <div id="viewContent" class="article-body"></div>
-          <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+          <div style="margin-top: 40px; border-top: 1px solid #ebebeb; padding-top: 20px;">
             <button id="editBtn" class="btn btn-outline">編輯條目</button>
             <button id="deleteBtn" class="btn btn-danger" style="margin-left: 10px;">刪除</button>
           </div>
@@ -150,7 +154,8 @@
           </div>
           <div class="editor-box">
             <input type="text" id="editTitle" placeholder="條目名稱 (例：護世)">
-            <select id="editCategory" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px;">
+            <input type="text" id="editSubtitle" placeholder="副標題 / 別名 (選填，例：2024年玄幻小說)">
+            <select id="editCategory" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px;">
               <option value="未分類">未分類</option>
               <option value="世界觀">世界觀</option>
               <option value="角色">角色</option>
@@ -183,8 +188,6 @@
     const viewer = document.getElementById('viewer');
     const editor = document.getElementById('editor');
     const welcomeScreen = document.getElementById('welcomeScreen');
-    
-    // 目錄相關 DOM
     const tocContainer = document.getElementById('tocContainer');
     const tocList = document.getElementById('tocList');
     const mainContentScroll = document.getElementById('mainContentScroll');
@@ -249,11 +252,27 @@
       currentId = id;
       
       document.getElementById('viewTitle').textContent = r.title;
-      document.getElementById('viewCategory').textContent = r.category;
+      // 如果有副標題就顯示
+      const subtitle = document.getElementById('viewSubtitle');
+      if (r.category) {
+        subtitle.textContent = '一個關於「' + r.category + '」的百科條目';
+      } else {
+        subtitle.textContent = '';
+      }
+      
+      document.getElementById('viewCategory').textContent = '分類：' + r.category;
       document.getElementById('viewDate').textContent = new Date(r.created_at).toLocaleString('zh-TW');
       
-      // 解析 Markdown
-      const htmlContent = marked.parse(r.content);
+      // 解析 Markdown 並自動加上數字標題
+      let htmlContent = marked.parse(r.content);
+      
+      // 替換 h2 標題，加上數字編號 (模擬百度百科)
+      let h2Count = 0;
+      htmlContent = htmlContent.replace(/<h2>(.*?)<\/h2>/g, (match, title) => {
+        h2Count++;
+        return `<h2><span style="color:#4e6ef2; margin-right:8px;">${h2Count}</span> ${title}</h2>`;
+      });
+      
       document.getElementById('viewContent').innerHTML = htmlContent;
 
       welcomeScreen.classList.add('hidden');
@@ -280,6 +299,7 @@
         return;
       }
 
+      let h2Idx = 0;
       headings.forEach((heading, index) => {
         // 給標題加上 id
         const id = 'heading-' + index;
@@ -288,11 +308,18 @@
         // 建立目錄項目
         const li = document.createElement('li');
         li.className = 'toc-item ' + (heading.tagName.toLowerCase()); // h2 或 h3
-        li.textContent = heading.textContent;
+        
+        // 如果有數字，抓取數字來當目錄前綴
+        if (heading.tagName === 'H2') {
+           h2Idx++;
+           li.textContent = h2Idx + ' ' + heading.textContent.replace(/^\d+/, '').trim();
+        } else {
+           li.textContent = heading.textContent;
+        }
         
         // 點擊滾動
         li.onclick = () => {
-          const yOffset = -80; // 預留頂部導航列的高度
+          const yOffset = -20; // 預留頂部導航列的高度
           const y = heading.getBoundingClientRect().top + mainContentScroll.scrollTop + yOffset;
           mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
         };
@@ -306,12 +333,11 @@
       currentId = null;
       document.getElementById('editorTitle').textContent = '建立新條目';
       document.getElementById('editTitle').value = '';
+      document.getElementById('editSubtitle').value = '';
       document.getElementById('editContent').value = '';
       welcomeScreen.classList.add('hidden');
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
-      
-      // 編輯時隱藏目錄
       tocContainer.classList.add('hidden');
     };
 
@@ -321,12 +347,11 @@
       if (!r) return;
       document.getElementById('editorTitle').textContent = '編輯條目：' + r.title;
       document.getElementById('editTitle').value = r.title;
+      document.getElementById('editSubtitle').value = r.subtitle || ''; // 假設有副標題欄位
       document.getElementById('editCategory').value = r.category;
       document.getElementById('editContent').value = r.content;
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
-      
-      // 編輯時隱藏目錄
       tocContainer.classList.add('hidden');
     };
 
@@ -343,6 +368,7 @@
     // 儲存
     document.getElementById('saveBtn').onclick = async () => {
       const title = document.getElementById('editTitle').value.trim();
+      const subtitle = document.getElementById('editSubtitle').value.trim();
       const category = document.getElementById('editCategory').value;
       const content = document.getElementById('editContent').value.trim();
       if (!title || !content) { alert('請填寫標題與內容'); return; }
@@ -373,8 +399,6 @@
       renderNav();
       viewer.classList.add('hidden');
       welcomeScreen.classList.remove('hidden');
-      
-      // 刪除時隱藏目錄
       tocContainer.classList.add('hidden');
     };
 
