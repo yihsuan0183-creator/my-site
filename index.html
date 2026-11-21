@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: #f5f6f8; color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     .hidden { display: none !important; }
 
     /* 登入畫面 */
@@ -34,74 +34,73 @@
     /* 主佈局 */
     .layout { display: flex; flex: 1; overflow: hidden; background: #fff; }
     
-    /* 左側條目列表 */
-    .sidebar { width: 240px; background: #f8f9fa; border-right: 1px solid #ebebeb; overflow-y: auto; padding: 15px 0; }
-    .sidebar-title { padding: 0 20px 10px; font-size: 1rem; font-weight: bold; color: #333; }
+    /* 左側目錄 */
+    .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #ebebeb; overflow-y: auto; padding: 15px 0; }
     .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.9rem; line-height: 1.4; border-left: 3px solid transparent; }
     .toc-item:hover { background: #eef1f6; color: #4e6ef2; }
-
-    /* 中間與右側的容器 */
-    .content-wrapper { flex: 1; display: flex; overflow-y: auto; position: relative; }
     
+    .sidebar-toc-grid { display: flex; flex-direction: column; gap: 2px; padding: 10px 20px; }
+    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; text-decoration: none; line-height: 1.6; display: flex; align-items: flex-start; }
+    .sidebar-toc-item:hover { text-decoration: underline; }
+    .sidebar-toc-item .num { width: 20px; flex-shrink: 0; font-family: Arial; }
+    .sidebar-toc-item.sub { padding-left: 20px; position: relative; font-size: 0.9rem; color: #666; }
+    .sidebar-toc-item.sub::before { content: "■"; font-size: 6px; color: #999; position: absolute; left: 8px; top: 8px; }
+    .sidebar-toc-item.sub:hover { color: #4e6ef2; }
+
     /* 中間文章區 */
-    .main-content { flex: 1; padding: 30px 40px; min-width: 0; }
+    .main-content { flex: 1; padding: 30px 40px; min-width: 0; overflow-y: auto; }
     .article-container { max-width: 900px; margin: 0 auto; }
     
-    /* 🔥 右側懸浮目錄 */
-    .floating-toc { width: 200px; padding: 30px 20px 30px 0; display: none; }
-    @media (min-width: 1200px) {
-      .floating-toc { display: block; position: sticky; top: 0; height: fit-content; }
-    }
-    
-    .floating-toc-title { font-size: 0.9rem; font-weight: bold; color: #666; margin-bottom: 10px; padding-left: 15px; border-left: 3px solid #4e6ef2; }
-    .floating-toc-list { list-style: none; padding: 0; margin: 0; border-left: 1px solid #ebebeb; }
-    .floating-toc-item { padding: 6px 10px 6px 15px; font-size: 0.85rem; color: #333; cursor: pointer; transition: all 0.2s; position: relative; line-height: 1.4; }
-    .floating-toc-item:hover { color: #4e6ef2; }
-    .floating-toc-item.h3 { padding-left: 30px; font-size: 0.8rem; color: #666; }
-    
-    /* 高亮當前段落 */
-    .floating-toc-item.active { color: #4e6ef2; font-weight: bold; background: #f0f4ff; border-left: 2px solid #4e6ef2; padding-left: 13px; }
-    .floating-toc-item.h3.active { padding-left: 28px; }
-
     /* 文章標題區 */
     .article-header { margin-bottom: 20px; }
-    .article-header h1 { font-size: 2.2rem; font-weight: bold; color: #222; margin-bottom: 8px; }
+    .article-header h1 { font-size: 2.4rem; font-weight: bold; color: #222; margin-bottom: 8px; font-family: "Times New Roman", serif; }
     .article-meta-bar { font-size: 0.8rem; color: #999; border-bottom: 1px solid #ebebeb; padding-bottom: 15px; display: flex; gap: 15px; }
 
-    /* 頂部大目錄 (4欄) */
-    .wiki-toc { border: 1px solid #eaecf0; background: #fff; padding: 20px; margin-bottom: 30px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-radius: 4px; }
-    .wiki-toc h2 { font-size: 1.2rem; font-weight: bold; text-align: center; margin-bottom: 20px; color: #333; }
-    .wiki-toc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px 10px; }
-    .wiki-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; text-decoration: none; line-height: 1.5; }
-    .wiki-toc-item:hover { text-decoration: underline; }
-    .wiki-toc-item span.num { margin-right: 5px; font-family: Arial, sans-serif; }
-    .wiki-toc-item.sub { font-size: 0.85rem; color: #666; padding-left: 20px; position: relative; }
-    .wiki-toc-item.sub::before { content: "■"; font-size: 6px; color: #999; position: absolute; left: 8px; top: 6px; }
-    .wiki-toc-item.sub:hover { color: #4e6ef2; }
-
-    /* 正文排版 */
+    /* 🔥 正文排版：完全復刻截圖 */
     .article-body { font-size: 1rem; line-height: 1.8; color: #222; }
     
-    /* 模擬百度百科的標題 (帶橫線與操作按鈕) */
+    /* h2 大標題：左邊粗體、右邊一條線延伸、最右邊有播報編輯 */
     .article-body h2 { 
-      font-size: 1.5rem; 
+      font-size: 1.6rem; 
       font-weight: bold; 
       margin: 40px 0 20px; 
-      padding-bottom: 10px;
-      border-bottom: 1px solid #ebebeb;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
+      align-items: center;
       scroll-margin-top: 20px;
+      color: #222;
     }
+    
+    .article-body h2::before {
+      content: "";
+      width: 4px;
+      height: 24px;
+      background: #4e6ef2;
+      margin-right: 10px;
+      border-radius: 2px;
+    }
+
     .article-body h2::after {
-      content: "🔊 播報  ✏️ 編輯"; /* 模擬截圖上的小按鈕 */
+      content: "🔊 播報    ✏️ 編輯";
+      flex: 1;
+      margin-left: 15px;
+      border-bottom: 1px solid #ebebeb;
       font-size: 0.8rem;
       color: #999;
       font-weight: normal;
-      opacity: 0.5;
+      opacity: 0.6;
+      text-align: right;
+      line-height: 2.5;
+      font-family: -apple-system, sans-serif;
     }
-    .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 30px 0 15px; scroll-margin-top: 20px; }
+
+    .article-body h3 { 
+      font-size: 1.3rem; 
+      font-weight: bold; 
+      margin: 30px 0 15px; 
+      scroll-margin-top: 20px; 
+      color: #333;
+    }
+    
     .article-body p { margin-bottom: 15px; text-align: justify; }
 
     /* 編輯器 */
@@ -112,7 +111,6 @@
 </head>
 <body>
 
-  <!-- 登入 -->
   <div id="authView" class="auth-view hidden">
     <div class="auth-card">
       <h1>我的百科</h1>
@@ -124,7 +122,6 @@
     </div>
   </div>
 
-  <!-- 主程式 -->
   <div id="mainView" class="hidden" style="width: 100%; height: 100%; display: flex; flex-direction: column;">
     <div class="top-navbar">
       <div class="logo">我的百科</div>
@@ -139,74 +136,57 @@
     </div>
 
     <div class="layout">
-      <!-- 左側條目 -->
+      <!-- 左側目錄 -->
       <div class="sidebar">
         <div id="navList"></div>
+        <div id="tocContainer" class="hidden" style="margin-top: 20px; border-top: 1px solid #ebebeb; padding-top: 15px;">
+          <div style="padding: 0 20px 10px; font-size: 1rem; font-weight: bold; color: #333;">本頁目錄</div>
+          <div class="sidebar-toc-grid" id="sidebarTocGrid"></div>
+        </div>
       </div>
 
-      <!-- 右側滾動區 -->
-      <div class="content-wrapper" id="mainContentScroll">
-        <div id="welcomeScreen" style="width: 100%; text-align: center; margin-top: 100px; color: #999;">
+      <!-- 右側內容區 -->
+      <div class="main-content" id="mainContentScroll">
+        <div id="welcomeScreen" style="text-align: center; margin-top: 100px; color: #999;">
           <h1 style="font-size: 2rem; font-weight: normal;">歡迎來到我的百科</h1>
           <p style="margin-top: 10px;">請從左側選擇條目，或點擊右上角新增。</p>
         </div>
 
-        <!-- 閱讀區 (包含文章與右側懸浮目錄) -->
-        <div id="viewer" class="hidden" style="display: flex; width: 100%;">
-          <div class="main-content">
-            <div class="article-container">
-              <div class="article-header">
-                <h1 id="viewTitle"></h1>
-                <div class="article-meta-bar">
-                  <span id="viewCategory"></span>
-                  <span>最後編輯：<span id="viewDate"></span></span>
-                </div>
-              </div>
-              
-              <!-- 頂部大目錄 -->
-              <div id="wikiTocContainer" class="wiki-toc hidden">
-                <h2>目錄</h2>
-                <div class="wiki-toc-grid" id="wikiTocGrid"></div>
-              </div>
-
-              <!-- 正文 -->
-              <div id="viewContent" class="article-body"></div>
-              
-              <div style="margin-top: 40px; border-top: 1px solid #ebebeb; padding-top: 20px;">
-                <button id="editBtn" class="btn btn-outline">編輯條目</button>
-                <button id="deleteBtn" class="btn btn-danger" style="margin-left: 10px;">刪除</button>
-              </div>
+        <div id="viewer" class="article-container hidden">
+          <div class="article-header">
+            <h1 id="viewTitle"></h1>
+            <div class="article-meta-bar">
+              <span id="viewCategory"></span>
+              <span>最後編輯：<span id="viewDate"></span></span>
             </div>
           </div>
           
-          <!-- 右側懸浮目錄 -->
-          <div class="floating-toc" id="floatingTocContainer">
-            <div class="floating-toc-title">本頁目錄</div>
-            <ul class="floating-toc-list" id="floatingTocList"></ul>
+          <div id="viewContent" class="article-body"></div>
+          
+          <div style="margin-top: 40px; border-top: 1px solid #ebebeb; padding-top: 20px;">
+            <button id="editBtn" class="btn btn-outline">編輯條目</button>
+            <button id="deleteBtn" class="btn btn-danger" style="margin-left: 10px;">刪除</button>
           </div>
         </div>
 
-        <!-- 編輯區 -->
-        <div id="editor" class="main-content hidden">
-          <div class="article-container">
-            <div class="article-header">
-              <h1 id="editorTitle">建立新條目</h1>
-            </div>
-            <div class="editor-box">
-              <input type="text" id="editTitle" placeholder="條目名稱 (例：護世)">
-              <select id="editCategory" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px;">
-                <option value="未分類">未分類</option>
-                <option value="世界觀">世界觀</option>
-                <option value="角色">角色</option>
-                <option value="劇情">劇情</option>
-                <option value="設定">設定</option>
-              </select>
-              <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">支援 Markdown 語法 (用 `## 作品簡介` 來當作大段落標題)</p>
-              <textarea id="editContent" placeholder="## 作品簡介&#10;這裡寫簡介..."></textarea>
-              <div style="margin-top: 10px;">
-                <button id="saveBtn" class="btn btn-primary">儲存</button>
-                <button id="cancelBtn" class="btn btn-outline" style="margin-left: 10px;">取消</button>
-              </div>
+        <div id="editor" class="article-container hidden">
+          <div class="article-header">
+            <h1 id="editorTitle">建立新條目</h1>
+          </div>
+          <div class="editor-box">
+            <input type="text" id="editTitle" placeholder="條目名稱 (例：護世)">
+            <select id="editCategory" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px;">
+              <option value="未分類">未分類</option>
+              <option value="世界觀">世界觀</option>
+              <option value="角色">角色</option>
+              <option value="劇情">劇情</option>
+              <option value="設定">設定</option>
+            </select>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">支援 Markdown 語法 (用 `## 標題` 當大段落，用 `### 標題` 當子段落)</p>
+            <textarea id="editContent" placeholder="## 作品簡介&#10;這裡寫簡介...&#10;&#10;## 作者簡介&#10;這裡寫作者..."></textarea>
+            <div style="margin-top: 10px;">
+              <button id="saveBtn" class="btn btn-primary">儲存</button>
+              <button id="cancelBtn" class="btn btn-outline" style="margin-left: 10px;">取消</button>
             </div>
           </div>
         </div>
@@ -229,17 +209,14 @@
     const viewer = document.getElementById('viewer');
     const editor = document.getElementById('editor');
     const welcomeScreen = document.getElementById('welcomeScreen');
-    
     const mainContentScroll = document.getElementById('mainContentScroll');
-    const wikiTocContainer = document.getElementById('wikiTocContainer');
-    const wikiTocGrid = document.getElementById('wikiTocGrid');
-    const floatingTocContainer = document.getElementById('floatingTocContainer');
-    const floatingTocList = document.getElementById('floatingTocList');
+    
+    const tocContainer = document.getElementById('tocContainer');
+    const sidebarTocGrid = document.getElementById('sidebarTocGrid');
 
     let records = [];
     let currentId = null;
     let keyword = '';
-    let activeHeadingId = '';
 
     function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
     function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
@@ -293,13 +270,14 @@
       
       let htmlContent = marked.parse(r.content);
       
-      // 替換 h2 標題，加上 id
+      // 🔥 移除標題內的數字，讓排版更乾淨
       let h2Count = 0;
       htmlContent = htmlContent.replace(/<h2>(.*?)<\/h2>/g, (match, title) => {
         h2Count++;
-        return `<h2 id="h2-${h2Count}"><span style="color:#4e6ef2; margin-right:8px;">${h2Count}</span> ${title}</h2>`;
+        const cleanTitle = title.replace(/^\d+/, '').trim();
+        return `<h2 id="h2-${h2Count}">${cleanTitle}</h2>`;
       });
-      // 替換 h3 標題，加上 id
+      
       let h3Count = 0;
       htmlContent = htmlContent.replace(/<h3>(.*?)<\/h3>/g, (match, title) => {
         h3Count++;
@@ -312,109 +290,53 @@
       editor.classList.add('hidden');
       viewer.classList.remove('hidden');
       
-      // 生成兩種目錄
-      generateTOCs();
+      generateTOC();
 
       renderNav();
       mainContentScroll.scrollTop = 0;
     }
 
-    // 🔥 生成頂部大目錄 與 右側懸浮目錄
-    function generateTOCs() {
-      wikiTocGrid.innerHTML = '';
-      floatingTocList.innerHTML = '';
-      activeHeadingId = '';
+    // 🔥 生成左側的藍色數字目錄
+    function generateTOC() {
+      sidebarTocGrid.innerHTML = '';
       
       const contentDiv = document.getElementById('viewContent');
       const headings = contentDiv.querySelectorAll('h2, h3');
       
-      if (headings.length < 2) {
-        wikiTocContainer.classList.add('hidden');
-        floatingTocContainer.classList.add('hidden');
+      if (headings.length < 1) {
+        tocContainer.classList.add('hidden');
         return;
       }
       
-      wikiTocContainer.classList.remove('hidden');
-      floatingTocContainer.classList.remove('hidden');
+      tocContainer.classList.remove('hidden');
 
       let h2Count = 0;
-      let h3Count = 0;
 
       headings.forEach((heading) => {
-        let displayTitle = heading.textContent;
-        let cleanTitle = '';
-        let isH3 = heading.tagName === 'H3';
+        const isH3 = heading.tagName === 'H3';
+        let displayTitle = heading.textContent.trim();
 
         if (!isH3) {
           h2Count++;
-          cleanTitle = displayTitle.replace(/^\d+/, '').trim();
+          const a = document.createElement('a');
+          a.className = 'sidebar-toc-item';
+          a.innerHTML = `<span class="num">${h2Count}</span> <span>${displayTitle}</span>`;
+          a.onclick = (e) => { e.preventDefault(); scrollToHeading(heading); };
+          sidebarTocGrid.appendChild(a);
         } else {
-          h3Count++;
-          cleanTitle = displayTitle;
+          const a = document.createElement('a');
+          a.className = 'sidebar-toc-item sub';
+          a.textContent = displayTitle;
+          a.onclick = (e) => { e.preventDefault(); scrollToHeading(heading); };
+          sidebarTocGrid.appendChild(a);
         }
-
-        // 1. 建立頂部大目錄項目
-        const aTop = document.createElement('a');
-        aTop.className = 'wiki-toc-item' + (isH3 ? ' sub' : '');
-        if (!isH3) aTop.innerHTML = `<span class="num">${h2Count}</span> ${cleanTitle}`;
-        else aTop.textContent = cleanTitle;
-        aTop.onclick = (e) => { e.preventDefault(); scrollToHeading(heading); };
-        wikiTocGrid.appendChild(aTop);
-
-        // 2. 建立右側懸浮目錄項目
-        const liSide = document.createElement('li');
-        liSide.className = 'floating-toc-item' + (isH3 ? ' h3' : '');
-        liSide.textContent = (isH3 ? '' : h2Count + ' ') + cleanTitle;
-        liSide.dataset.targetId = heading.id;
-        liSide.onclick = () => scrollToHeading(heading);
-        floatingTocList.appendChild(liSide);
       });
-
-      // 綁定滾動監聽器以高亮右側目錄
-      mainContentScroll.removeEventListener('scroll', handleScrollHighlight);
-      mainContentScroll.addEventListener('scroll', handleScrollHighlight);
-      handleScrollHighlight(); // 初始執行一次
     }
 
-    // 滾動到標題位置
     function scrollToHeading(heading) {
       const yOffset = -20; 
       const y = heading.getBoundingClientRect().top + mainContentScroll.scrollTop + yOffset;
       mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
-    }
-
-    // 🔥 處理滾動時的高亮邏輯
-    function handleScrollHighlight() {
-      const headings = document.getElementById('viewContent').querySelectorAll('h2, h3');
-      if (headings.length === 0) return;
-
-      const scrollTop = mainContentScroll.scrollTop;
-      let currentId = headings[0].id;
-
-      for (let i = 0; i < headings.length; i++) {
-        const heading = headings[i];
-        // 取得標題距離頂部的距離
-        const offsetTop = heading.offsetTop;
-        // 如果滾動超過標題位置（扣除一點誤差），就更新當前 ID
-        if (scrollTop >= offsetTop - 100) {
-          currentId = heading.id;
-        } else {
-          break;
-        }
-      }
-
-      if (activeHeadingId !== currentId) {
-        activeHeadingId = currentId;
-        
-        // 更新所有右側目錄的 class
-        document.querySelectorAll('.floating-toc-item').forEach(item => {
-          if (item.dataset.targetId === currentId) {
-            item.classList.add('active');
-          } else {
-            item.classList.remove('active');
-          }
-        });
-      }
     }
 
     document.getElementById('newEntryBtn').onclick = () => {
@@ -425,6 +347,7 @@
       welcomeScreen.classList.add('hidden');
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
+      tocContainer.classList.add('hidden');
     };
 
     document.getElementById('editBtn').onclick = () => {
@@ -436,6 +359,7 @@
       document.getElementById('editContent').value = r.content;
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
+      tocContainer.classList.add('hidden');
     };
 
     document.getElementById('cancelBtn').onclick = () => {
@@ -474,6 +398,7 @@
       renderNav();
       viewer.classList.add('hidden');
       welcomeScreen.classList.remove('hidden');
+      tocContainer.classList.add('hidden');
     };
 
     document.getElementById('searchInput').addEventListener('input', e => {
