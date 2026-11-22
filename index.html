@@ -64,8 +64,23 @@
     /* 小標題 (H3) */
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 30px 0 15px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
-    .article-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; text-align: center; }
-    .article-body th, .article-body td { border: 1px solid #a2a9b1; padding: 10px; }
+    /* 表格排版優化（解決四字詞彙掉字換行、垂直對齊問題） */
+    .article-body table {
+      width: 100%;
+      table-layout: auto;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .article-body th, .article-body td {
+      border: 1px solid #a2a9b1;
+      padding: 10px 12px;
+      vertical-align: middle;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
     /* 編輯區 (Word 風格) */
@@ -80,7 +95,7 @@
     /* 編輯器本體 */
     #rich-editor { min-height: 400px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 20px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; }
     #rich-editor table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    #rich-editor th, #rich-editor td { border: 1px solid #a2a9b1; padding: 8px; text-align: center; }
+    #rich-editor th, #rich-editor td { border: 1px solid #a2a9b1; padding: 8px 10px; text-align: center; vertical-align: middle; }
     #rich-editor th { background-color: #eaecf0; }
     
     /* 編輯器內的標題即時預覽 */
@@ -162,7 +177,6 @@
               <option value="設定">設定</option>
             </select>
 
-            <!-- 🔥 補上了小標題按鈕，並加上分隔線 -->
             <div class="toolbar">
               <button onclick="formatDoc('formatBlock', 'h2')">大標題 (H2)</button>
               <button onclick="formatDoc('formatBlock', 'h3')">小標題 (H3)</button>
@@ -302,7 +316,8 @@
         a.onclick = (e) => {
           e.preventDefault();
           const yOffset = -20; 
-          const y = heading.getBoundingClientRect().top + mainContentScroll.scrollTop + yOffset;
+          const containerTop = mainContentScroll.getBoundingClientRect().top;
+          const y = heading.getBoundingClientRect().top - containerTop + mainContentScroll.scrollTop + yOffset;
           mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
         };
 
