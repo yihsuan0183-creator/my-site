@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>我的百科</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <!-- 引入 Quill 富文本編輯器 -->
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: "PingFang SC", "Microsoft YaHei", sans-serif; background: #f5f6f8; color: #333; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -32,16 +35,9 @@
 
     /* 主佈局 */
     .layout { display: flex; flex: 1; overflow: hidden; background: #fff; }
-    
-    /* 左側目錄 */
     .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #ebebeb; overflow-y: auto; padding: 15px 0; }
     .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.9rem; border-left: 3px solid transparent; }
     .toc-item:hover { background: #eef1f6; color: #4e6ef2; }
-    .sidebar-toc-grid { display: flex; flex-direction: column; gap: 2px; padding: 10px 20px; }
-    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; line-height: 1.6; display: flex; }
-    .sidebar-toc-item .num { width: 20px; }
-    .sidebar-toc-item.sub { padding-left: 20px; position: relative; font-size: 0.9rem; color: #666; }
-    .sidebar-toc-item.sub::before { content: "■"; font-size: 6px; color: #999; position: absolute; left: 8px; top: 8px; }
 
     /* 中間文章區 */
     .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
@@ -49,35 +45,29 @@
     .article-header h1 { font-size: 2.4rem; color: #222; margin-bottom: 8px; font-family: "Times New Roman", serif; }
     .article-meta-bar { font-size: 0.8rem; color: #999; border-bottom: 1px solid #ebebeb; padding-bottom: 15px; display: flex; gap: 15px; }
 
-    /* 正文排版 */
+    /* 閱讀區的排版樣式 */
     .article-body { font-size: 1rem; line-height: 1.8; color: #222; }
     .article-body h2 { font-size: 1.6rem; font-weight: bold; margin: 40px 0 20px; display: flex; align-items: center; }
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
-    .article-body h2::after { content: "🔊 播報    ✏️ 編輯"; flex: 1; margin-left: 15px; border-bottom: 1px solid #ebebeb; font-size: 0.8rem; color: #999; font-weight: normal; opacity: 0.6; text-align: right; line-height: 2.5; }
-    .article-body h3 { font-size: 1.3rem; font-weight: bold; margin: 30px 0 15px; }
-    .article-body p { margin-bottom: 15px; text-align: justify; }
-    
-    /* 表格外觀 */
     .article-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; text-align: center; }
     .article-body th, .article-body td { border: 1px solid #a2a9b1; padding: 10px; }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
-    /* 編輯器 */
+    /* 🔥 Quill 編輯器外觀覆蓋，讓它看起來像百科 */
     .editor-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-top: 20px; }
-    .editor-box input, .editor-box select, .editor-box textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 0.95rem; }
-    .editor-box textarea { min-height: 250px; font-family: monospace; line-height: 1.6; }
-
-    /* 視覺化表格編輯器 */
-    .visual-table-wrap { overflow-x: auto; margin: 15px 0; border: 1px solid #ccc; border-radius: 4px; max-height: 400px; }
-    .visual-table { border-collapse: collapse; width: 100%; min-width: 800px; background: #fff; }
-    .visual-table th, .visual-table td { border: 1px solid #ddd; padding: 0; position: relative; }
-    .visual-table input { border: none; width: 100%; padding: 10px; text-align: center; font-size: 0.9rem; outline: none; background: transparent; }
-    .visual-table input:focus { background: #f0f4ff; }
-    .visual-table th input { font-weight: bold; background: #f8f9fa; }
-    .visual-table .row-actions { padding: 5px; text-align: center; width: 40px; }
-    .btn-icon { background: transparent; border: none; cursor: pointer; color: #999; font-size: 1.2rem; padding: 5px; }
-    .btn-icon:hover { color: #f33; }
-    .editor-toolbar { display: flex; gap: 10px; margin-bottom: 10px; }
+    .editor-box input, .editor-box select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 0.95rem; }
+    
+    /* 編輯器內容區 */
+    #editor-container { height: 500px; background: #fff; font-size: 1rem; }
+    .ql-toolbar.ql-snow { border: 1px solid #ccc; border-radius: 4px 4px 0 0; background: #fff; }
+    .ql-container.ql-snow { border: 1px solid #ccc; border-top: none; border-radius: 0 0 4px 4px; font-family: inherit; }
+    /* Quill 內部的表格樣式 */
+    .ql-editor table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+    .ql-editor th, .ql-editor td { border: 1px solid #a2a9b1; padding: 10px; text-align: center; }
+    .ql-editor th { background-color: #eaecf0; }
+    /* Quill 內部標題樣式 */
+    .ql-editor h2 { font-size: 1.6rem; font-weight: bold; margin: 30px 0 15px; display: flex; align-items: center; }
+    .ql-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
   </style>
 </head>
 <body>
@@ -109,10 +99,6 @@
     <div class="layout">
       <div class="sidebar">
         <div id="navList"></div>
-        <div id="tocContainer" class="hidden" style="margin-top: 20px; border-top: 1px solid #ebebeb; padding-top: 15px;">
-          <div style="padding: 0 20px 10px; font-size: 1rem; font-weight: bold; color: #333;">本頁目錄</div>
-          <div class="sidebar-toc-grid" id="sidebarTocGrid"></div>
-        </div>
       </div>
 
       <div class="main-content" id="mainContentScroll">
@@ -130,14 +116,15 @@
               <span>最後編輯：<span id="viewDate"></span></span>
             </div>
           </div>
-          <div id="viewContent" class="article-body"></div>
+          <!-- 文章內容顯示區 -->
+          <div id="viewContent" class="article-body ql-editor"></div>
           <div style="margin-top: 40px; border-top: 1px solid #ebebeb; padding-top: 20px;">
             <button id="editBtn" class="btn btn-outline">編輯條目</button>
             <button id="deleteBtn" class="btn btn-danger" style="margin-left: 10px;">刪除</button>
           </div>
         </div>
 
-        <!-- 編輯區 (包含表格產生器) -->
+        <!-- 編輯區 (Word 風格) -->
         <div id="editor" class="article-container hidden">
           <div class="article-header">
             <h1 id="editorTitle">建立新條目</h1>
@@ -145,7 +132,7 @@
           
           <div class="editor-box">
             <input type="text" id="editTitle" placeholder="條目名稱 (例：護世)">
-            <select id="editCategory" style="width: 100%;">
+            <select id="editCategory">
               <option value="未分類">未分類</option>
               <option value="世界觀">世界觀</option>
               <option value="角色">角色</option>
@@ -153,32 +140,18 @@
               <option value="設定">設定</option>
             </select>
 
-            <!-- 視覺化表格工具 -->
-            <div style="background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;">
-              <h3 style="margin-bottom: 10px; font-size: 1rem; color: #4e6ef2;">📊 插入表格</h3>
-              <div class="editor-toolbar">
-                <input type="number" id="tblRows" value="3" min="1" max="20" style="width: 60px; padding: 5px;">
-                <span>列 x</span>
-                <input type="number" id="tblCols" value="3" min="1" max="15" style="width: 60px; padding: 5px;">
-                <span>欄</span>
-                <button class="btn btn-outline" onclick="generateTable()">生成表格</button>
-              </div>
-              <div class="visual-table-wrap hidden" id="visualTableWrap">
-                <table class="visual-table" id="visualTable"></table>
-              </div>
-              <button class="btn btn-primary hidden" id="insertTableBtn" onclick="insertTableToContent()" style="margin-top: 10px; width: 100%;">將表格插入文章</button>
-            </div>
-
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">內文 (支援 Markdown 語法)</p>
-            <textarea id="editContent" placeholder="## 作品簡介&#10;這裡寫內容..."></textarea>
+            <!-- 真正所見即所得的編輯器 -->
+            <div style="margin-bottom: 12px; font-size: 0.85rem; color: #666;">內文編輯 (可直接使用上方工具列插入表格)：</div>
+            <div id="editor-container"></div>
             
-            <div style="margin-top: 10px;">
+            <div style="margin-top: 15px;">
               <button id="saveBtn" class="btn btn-primary">儲存條目</button>
               <button id="cancelBtn" class="btn btn-outline" style="margin-left: 10px;">取消</button>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 
@@ -190,15 +163,30 @@
       auth: { persistSession: true, autoRefreshToken: true }
     });
 
+    // 🔥 初始化 Quill 編輯器 (支援表格)
+    const quill = new Quill('#editor-container', {
+      theme: 'snow',
+      modules: {
+        table: true, // 開啟表格模組
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          ['blockquote', 'code-block'],
+          ['link', 'image'],
+          ['clean']
+        ]
+      },
+      placeholder: '開始寫百科內容...'
+    });
+
     const authView = document.getElementById('authView');
     const mainView = document.getElementById('mainView');
     const navList = document.getElementById('navList');
     const viewer = document.getElementById('viewer');
     const editor = document.getElementById('editor');
     const welcomeScreen = document.getElementById('welcomeScreen');
-    const mainContentScroll = document.getElementById('mainContentScroll');
-    const tocContainer = document.getElementById('tocContainer');
-    const sidebarTocGrid = document.getElementById('sidebarTocGrid');
 
     let records = [];
     let currentId = null;
@@ -254,72 +242,24 @@
       document.getElementById('viewCategory').textContent = '分類：' + r.category;
       document.getElementById('viewDate').textContent = new Date(r.created_at).toLocaleString('zh-TW');
       
-      // 解析 Markdown 與 HTML 混合內容
-      let htmlContent = marked.parse(r.content);
-      
-      let h2Count = 0;
-      htmlContent = htmlContent.replace(/<h2>(.*?)<\/h2>/g, (match, title) => {
-        h2Count++;
-        const cleanTitle = title.replace(/^\d+/, '').trim();
-        return `<h2 id="h2-${h2Count}">${cleanTitle}</h2>`;
-      });
-      let h3Count = 0;
-      htmlContent = htmlContent.replace(/<h3>(.*?)<\/h3>/g, (match, title) => {
-        h3Count++;
-        return `<h3 id="h3-${h3Count}">${title}</h3>`;
-      });
-      
-      document.getElementById('viewContent').innerHTML = htmlContent;
+      // 直接把 Quill 儲存的 HTML 塞進閱讀區
+      document.getElementById('viewContent').innerHTML = r.content;
 
       welcomeScreen.classList.add('hidden');
       editor.classList.add('hidden');
       viewer.classList.remove('hidden');
       
-      generateTOC();
       renderNav();
-      mainContentScroll.scrollTop = 0;
-    }
-
-    function generateTOC() {
-      sidebarTocGrid.innerHTML = '';
-      const contentDiv = document.getElementById('viewContent');
-      const headings = contentDiv.querySelectorAll('h2, h3');
-      if (headings.length < 1) { tocContainer.classList.add('hidden'); return; }
-      tocContainer.classList.remove('hidden');
-      
-      let h2Count = 0;
-      headings.forEach((heading) => {
-        const isH3 = heading.tagName === 'H3';
-        let displayTitle = heading.textContent.trim();
-        const a = document.createElement('a');
-        if (!isH3) {
-          h2Count++;
-          a.className = 'sidebar-toc-item';
-          a.innerHTML = `<span class="num">${h2Count}</span> <span>${displayTitle}</span>`;
-        } else {
-          a.className = 'sidebar-toc-item sub';
-          a.textContent = displayTitle;
-        }
-        a.onclick = (e) => {
-          e.preventDefault();
-          const y = heading.getBoundingClientRect().top + mainContentScroll.scrollTop - 20;
-          mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
-        };
-        sidebarTocGrid.appendChild(a);
-      });
     }
 
     document.getElementById('newEntryBtn').onclick = () => {
       currentId = null;
       document.getElementById('editorTitle').textContent = '建立新條目';
       document.getElementById('editTitle').value = '';
-      document.getElementById('editContent').value = '';
-      document.getElementById('visualTableWrap').classList.add('hidden');
-      document.getElementById('insertTableBtn').classList.add('hidden');
+      quill.root.innerHTML = ''; // 清空編輯器
       welcomeScreen.classList.add('hidden');
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
-      tocContainer.classList.add('hidden');
     };
 
     document.getElementById('editBtn').onclick = () => {
@@ -328,12 +268,12 @@
       document.getElementById('editorTitle').textContent = '編輯條目：' + r.title;
       document.getElementById('editTitle').value = r.title;
       document.getElementById('editCategory').value = r.category;
-      document.getElementById('editContent').value = r.content;
-      document.getElementById('visualTableWrap').classList.add('hidden');
-      document.getElementById('insertTableBtn').classList.add('hidden');
+      
+      // 把文章內容塞回視覺化編輯器，直接編輯表格！
+      quill.root.innerHTML = r.content; 
+      
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
-      tocContainer.classList.add('hidden');
     };
 
     document.getElementById('cancelBtn').onclick = () => {
@@ -344,8 +284,11 @@
     document.getElementById('saveBtn').onclick = async () => {
       const title = document.getElementById('editTitle').value.trim();
       const category = document.getElementById('editCategory').value;
-      const content = document.getElementById('editContent').value.trim();
-      if (!title || !content) { alert('請填寫標題與內容'); return; }
+      
+      // 取得編輯器裡的 HTML (包含表格)
+      const content = quill.root.innerHTML;
+      
+      if (!title || quill.getText().trim() === '') { alert('請填寫標題與內容'); return; }
 
       if (currentId) {
         const { error } = await db.from('records').update({ title, category, content }).eq('id', currentId);
@@ -372,86 +315,12 @@
       renderNav();
       viewer.classList.add('hidden');
       welcomeScreen.classList.remove('hidden');
-      tocContainer.classList.add('hidden');
     };
 
-    // ==========================================
-    // 🔥 以下是「視覺化表格編輯器」的邏輯
-    // ==========================================
-    
-    function generateTable() {
-      const rows = parseInt(document.getElementById('tblRows').value);
-      const cols = parseInt(document.getElementById('tblCols').value);
-      const table = document.getElementById('visualTable');
-      
-      table.innerHTML = '';
-      
-      // 建立表頭
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
-      for (let i = 0; i < cols; i++) {
-        const th = document.createElement('th');
-        th.innerHTML = `<input type="text" placeholder="標題 ${i+1}" value="${i===0 ? '路徑' : (i===cols-1 ? '魁首' : '')}">`;
-        trHead.appendChild(th);
-      }
-      thead.appendChild(trHead);
-      table.appendChild(thead);
-
-      // 建立內容
-      const tbody = document.createElement('tbody');
-      for (let r = 0; r < rows; r++) {
-        const tr = document.createElement('tr');
-        for (let c = 0; c < cols; c++) {
-          const td = document.createElement('td');
-          // 如果是第一欄或第二欄，預設給個提示
-          let placeholder = "輸入內容";
-          td.innerHTML = `<input type="text" placeholder="${placeholder}">`;
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-      }
-      table.appendChild(tbody);
-
-      document.getElementById('visualTableWrap').classList.remove('hidden');
-      document.getElementById('insertTableBtn').classList.remove('hidden');
-    }
-
-    function insertTableToContent() {
-      const table = document.getElementById('visualTable');
-      let html = '<table style="width:100%; border-collapse:collapse; text-align:center; font-size: 14px;">\n';
-      
-      // 抓表頭
-      const heads = table.querySelectorAll('thead th');
-      html += '  <tr style="background:#eaecf0;">\n';
-      heads.forEach(th => {
-        const val = th.querySelector('input').value || '&nbsp;';
-        html += `    <th style="border:1px solid #a2a9b1; padding:10px;">${val}</th>\n`;
-      });
-      html += '  </tr>\n';
-
-      // 抓內容
-      const rows = table.querySelectorAll('tbody tr');
-      rows.forEach(tr => {
-        html += '  <tr>\n';
-        const tds = tr.querySelectorAll('td');
-        tds.forEach((td, index) => {
-          let val = td.querySelector('input').value || '&nbsp;';
-          // 第一欄加粗
-          if (index === 0) val = `<b>${val}</b>`;
-          html += `    <td style="border:1px solid #a2a9b1; padding:10px;">${val}</td>\n`;
-        });
-        html += '  </tr>\n';
-      });
-      html += '</table>\n\n';
-
-      // 插入到內文的最後方
-      const textarea = document.getElementById('editContent');
-      textarea.value += '\n\n' + html;
-      
-      alert('表格已插入到文章底部！你可以繼續編輯文字。');
-      document.getElementById('visualTableWrap').classList.add('hidden');
-      document.getElementById('insertTableBtn').classList.add('hidden');
-    }
+    document.getElementById('searchInput').addEventListener('input', e => {
+      keyword = e.target.value;
+      renderNav();
+    });
 
     // 啟動
     (async () => {
