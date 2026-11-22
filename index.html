@@ -17,13 +17,12 @@
     .auth-card h1 { text-align: center; color: #2932e1; }
     .auth-card input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
     .auth-card button { padding: 12px; background: #4e6ef2; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; }
-    .auth-card button.ghost { background: #fff; color: #4e6ef2; border: 1px solid #4e6ef2; }
 
-    /* 頂部導航列 */
+    /* 頂部導航 */
     .top-navbar { height: 56px; background: #fff; border-bottom: 1px solid #ebebeb; display: flex; align-items: center; padding: 0 24px; z-index: 100; }
-    .top-navbar .logo { font-size: 1.4rem; font-weight: bold; color: #2932e1; margin-right: 30px; letter-spacing: 1px; }
+    .top-navbar .logo { font-size: 1.4rem; font-weight: bold; color: #2932e1; margin-right: 30px; }
     .top-navbar .search-box { display: flex; align-items: center; width: 400px; }
-    .top-navbar .search-box input { flex: 1; padding: 8px 12px; border: 1px solid #ccd0d9; border-right: none; border-radius: 4px 0 0 4px; outline: none; }
+    .top-navbar .search-box input { flex: 1; padding: 8px 12px; border: 1px solid #ccd0d9; border-right: none; border-radius: 4px 0 0 4px; }
     .top-navbar .search-box button { padding: 8px 20px; background: #4e6ef2; color: #fff; border: none; border-radius: 0 4px 4px 0; cursor: pointer; }
     .top-navbar .actions { margin-left: auto; display: flex; gap: 12px; }
     .btn { padding: 8px 16px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.9rem; }
@@ -36,83 +35,49 @@
     
     /* 左側目錄 */
     .sidebar { width: 260px; background: #f8f9fa; border-right: 1px solid #ebebeb; overflow-y: auto; padding: 15px 0; }
-    .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.9rem; line-height: 1.4; border-left: 3px solid transparent; }
+    .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.9rem; border-left: 3px solid transparent; }
     .toc-item:hover { background: #eef1f6; color: #4e6ef2; }
-    
     .sidebar-toc-grid { display: flex; flex-direction: column; gap: 2px; padding: 10px 20px; }
-    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; text-decoration: none; line-height: 1.6; display: flex; align-items: flex-start; }
-    .sidebar-toc-item:hover { text-decoration: underline; }
-    .sidebar-toc-item .num { width: 20px; flex-shrink: 0; font-family: Arial; }
+    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; line-height: 1.6; display: flex; }
+    .sidebar-toc-item .num { width: 20px; }
     .sidebar-toc-item.sub { padding-left: 20px; position: relative; font-size: 0.9rem; color: #666; }
     .sidebar-toc-item.sub::before { content: "■"; font-size: 6px; color: #999; position: absolute; left: 8px; top: 8px; }
-    .sidebar-toc-item.sub:hover { color: #4e6ef2; }
 
     /* 中間文章區 */
-    .main-content { flex: 1; padding: 30px 40px; min-width: 0; overflow-y: auto; }
+    .main-content { flex: 1; padding: 30px 40px; overflow-y: auto; }
     .article-container { max-width: 900px; margin: 0 auto; }
-    
-    /* 文章標題區 */
-    .article-header { margin-bottom: 20px; }
-    .article-header h1 { font-size: 2.4rem; font-weight: bold; color: #222; margin-bottom: 8px; font-family: "Times New Roman", serif; }
+    .article-header h1 { font-size: 2.4rem; color: #222; margin-bottom: 8px; font-family: "Times New Roman", serif; }
     .article-meta-bar { font-size: 0.8rem; color: #999; border-bottom: 1px solid #ebebeb; padding-bottom: 15px; display: flex; gap: 15px; }
 
-    /* 🔥 正文排版：完全復刻截圖 */
+    /* 正文排版 */
     .article-body { font-size: 1rem; line-height: 1.8; color: #222; }
-    
-    /* h2 大標題：左邊粗體、右邊一條線延伸、最右邊有播報編輯 */
-    .article-body h2 { 
-      font-size: 1.6rem; 
-      font-weight: bold; 
-      margin: 40px 0 20px; 
-      display: flex;
-      align-items: center;
-      scroll-margin-top: 20px;
-      color: #222;
-    }
-    
-    .article-body h2::before {
-      content: "";
-      width: 4px;
-      height: 24px;
-      background: #4e6ef2;
-      margin-right: 10px;
-      border-radius: 2px;
-    }
-
-    .article-body h2::after {
-      content: "🔊 播報    ✏️ 編輯";
-      flex: 1;
-      margin-left: 15px;
-      border-bottom: 1px solid #ebebeb;
-      font-size: 0.8rem;
-      color: #999;
-      font-weight: normal;
-      opacity: 0.6;
-      text-align: right;
-      line-height: 2.5;
-      font-family: -apple-system, sans-serif;
-    }
-
-    .article-body h3 { 
-      font-size: 1.3rem; 
-      font-weight: bold; 
-      margin: 30px 0 15px; 
-      scroll-margin-top: 20px; 
-      color: #333;
-    }
-    
+    .article-body h2 { font-size: 1.6rem; font-weight: bold; margin: 40px 0 20px; display: flex; align-items: center; }
+    .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
+    .article-body h2::after { content: "🔊 播報    ✏️ 編輯"; flex: 1; margin-left: 15px; border-bottom: 1px solid #ebebeb; font-size: 0.8rem; color: #999; font-weight: normal; opacity: 0.6; text-align: right; line-height: 2.5; }
+    .article-body h3 { font-size: 1.3rem; font-weight: bold; margin: 30px 0 15px; }
     .article-body p { margin-bottom: 15px; text-align: justify; }
-
-    /* 🔥 表格樣式 (補回來了！) */
-    .article-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; }
-    .article-body th, .article-body td { border: 1px solid #a2a9b1; padding: 10px 12px; text-align: left; }
+    
+    /* 表格外觀 */
+    .article-body table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; text-align: center; }
+    .article-body th, .article-body td { border: 1px solid #a2a9b1; padding: 10px; }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
-    .article-body tr:nth-child(even) { background-color: #f8f9fa; }
 
     /* 編輯器 */
     .editor-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 20px; margin-top: 20px; }
-    .editor-box input, .editor-box textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 0.95rem; }
-    .editor-box textarea { min-height: 400px; line-height: 1.6; resize: vertical; }
+    .editor-box input, .editor-box select, .editor-box textarea { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; font-size: 0.95rem; }
+    .editor-box textarea { min-height: 250px; font-family: monospace; line-height: 1.6; }
+
+    /* 視覺化表格編輯器 */
+    .visual-table-wrap { overflow-x: auto; margin: 15px 0; border: 1px solid #ccc; border-radius: 4px; max-height: 400px; }
+    .visual-table { border-collapse: collapse; width: 100%; min-width: 800px; background: #fff; }
+    .visual-table th, .visual-table td { border: 1px solid #ddd; padding: 0; position: relative; }
+    .visual-table input { border: none; width: 100%; padding: 10px; text-align: center; font-size: 0.9rem; outline: none; background: transparent; }
+    .visual-table input:focus { background: #f0f4ff; }
+    .visual-table th input { font-weight: bold; background: #f8f9fa; }
+    .visual-table .row-actions { padding: 5px; text-align: center; width: 40px; }
+    .btn-icon { background: transparent; border: none; cursor: pointer; color: #999; font-size: 1.2rem; padding: 5px; }
+    .btn-icon:hover { color: #f33; }
+    .editor-toolbar { display: flex; gap: 10px; margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -122,8 +87,8 @@
       <h1>我的百科</h1>
       <input type="email" id="email" placeholder="Email">
       <input type="password" id="password" placeholder="密碼">
-      <button id="loginBtn">登入</button>
-      <button id="signupBtn" class="ghost">註冊</button>
+      <button id="loginBtn" class="btn-primary">登入</button>
+      <button id="signupBtn" class="btn-outline">註冊</button>
       <p id="authMsg" style="color:#f33; font-size:0.85rem; text-align:center;"></p>
     </div>
   </div>
@@ -142,7 +107,6 @@
     </div>
 
     <div class="layout">
-      <!-- 左側目錄 -->
       <div class="sidebar">
         <div id="navList"></div>
         <div id="tocContainer" class="hidden" style="margin-top: 20px; border-top: 1px solid #ebebeb; padding-top: 15px;">
@@ -151,13 +115,13 @@
         </div>
       </div>
 
-      <!-- 右側內容區 -->
       <div class="main-content" id="mainContentScroll">
         <div id="welcomeScreen" style="text-align: center; margin-top: 100px; color: #999;">
           <h1 style="font-size: 2rem; font-weight: normal;">歡迎來到我的百科</h1>
           <p style="margin-top: 10px;">請從左側選擇條目，或點擊右上角新增。</p>
         </div>
 
+        <!-- 閱讀區 -->
         <div id="viewer" class="article-container hidden">
           <div class="article-header">
             <h1 id="viewTitle"></h1>
@@ -166,38 +130,55 @@
               <span>最後編輯：<span id="viewDate"></span></span>
             </div>
           </div>
-          
           <div id="viewContent" class="article-body"></div>
-          
           <div style="margin-top: 40px; border-top: 1px solid #ebebeb; padding-top: 20px;">
             <button id="editBtn" class="btn btn-outline">編輯條目</button>
             <button id="deleteBtn" class="btn btn-danger" style="margin-left: 10px;">刪除</button>
           </div>
         </div>
 
+        <!-- 編輯區 (包含表格產生器) -->
         <div id="editor" class="article-container hidden">
           <div class="article-header">
             <h1 id="editorTitle">建立新條目</h1>
           </div>
+          
           <div class="editor-box">
             <input type="text" id="editTitle" placeholder="條目名稱 (例：護世)">
-            <select id="editCategory" style="width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px;">
+            <select id="editCategory" style="width: 100%;">
               <option value="未分類">未分類</option>
               <option value="世界觀">世界觀</option>
               <option value="角色">角色</option>
               <option value="劇情">劇情</option>
               <option value="設定">設定</option>
             </select>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">支援 Markdown 語法 (用 `## 標題` 當大段落，用 `### 標題` 當子段落)</p>
-            <textarea id="editContent" placeholder="## 作品簡介&#10;這裡寫簡介...&#10;&#10;## 作者簡介&#10;這裡寫作者..."></textarea>
+
+            <!-- 視覺化表格工具 -->
+            <div style="background: #fff; padding: 15px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px;">
+              <h3 style="margin-bottom: 10px; font-size: 1rem; color: #4e6ef2;">📊 插入表格</h3>
+              <div class="editor-toolbar">
+                <input type="number" id="tblRows" value="3" min="1" max="20" style="width: 60px; padding: 5px;">
+                <span>列 x</span>
+                <input type="number" id="tblCols" value="3" min="1" max="15" style="width: 60px; padding: 5px;">
+                <span>欄</span>
+                <button class="btn btn-outline" onclick="generateTable()">生成表格</button>
+              </div>
+              <div class="visual-table-wrap hidden" id="visualTableWrap">
+                <table class="visual-table" id="visualTable"></table>
+              </div>
+              <button class="btn btn-primary hidden" id="insertTableBtn" onclick="insertTableToContent()" style="margin-top: 10px; width: 100%;">將表格插入文章</button>
+            </div>
+
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 8px;">內文 (支援 Markdown 語法)</p>
+            <textarea id="editContent" placeholder="## 作品簡介&#10;這裡寫內容..."></textarea>
+            
             <div style="margin-top: 10px;">
-              <button id="saveBtn" class="btn btn-primary">儲存</button>
+              <button id="saveBtn" class="btn btn-primary">儲存條目</button>
               <button id="cancelBtn" class="btn btn-outline" style="margin-left: 10px;">取消</button>
             </div>
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
@@ -216,7 +197,6 @@
     const editor = document.getElementById('editor');
     const welcomeScreen = document.getElementById('welcomeScreen');
     const mainContentScroll = document.getElementById('mainContentScroll');
-    
     const tocContainer = document.getElementById('tocContainer');
     const sidebarTocGrid = document.getElementById('sidebarTocGrid');
 
@@ -274,16 +254,15 @@
       document.getElementById('viewCategory').textContent = '分類：' + r.category;
       document.getElementById('viewDate').textContent = new Date(r.created_at).toLocaleString('zh-TW');
       
+      // 解析 Markdown 與 HTML 混合內容
       let htmlContent = marked.parse(r.content);
       
-      // 🔥 移除標題內的數字，讓排版更乾淨
       let h2Count = 0;
       htmlContent = htmlContent.replace(/<h2>(.*?)<\/h2>/g, (match, title) => {
         h2Count++;
         const cleanTitle = title.replace(/^\d+/, '').trim();
         return `<h2 id="h2-${h2Count}">${cleanTitle}</h2>`;
       });
-      
       let h3Count = 0;
       htmlContent = htmlContent.replace(/<h3>(.*?)<\/h3>/g, (match, title) => {
         h3Count++;
@@ -297,52 +276,37 @@
       viewer.classList.remove('hidden');
       
       generateTOC();
-
       renderNav();
       mainContentScroll.scrollTop = 0;
     }
 
-    // 🔥 生成左側的藍色數字目錄
     function generateTOC() {
       sidebarTocGrid.innerHTML = '';
-      
       const contentDiv = document.getElementById('viewContent');
       const headings = contentDiv.querySelectorAll('h2, h3');
-      
-      if (headings.length < 1) {
-        tocContainer.classList.add('hidden');
-        return;
-      }
-      
+      if (headings.length < 1) { tocContainer.classList.add('hidden'); return; }
       tocContainer.classList.remove('hidden');
-
+      
       let h2Count = 0;
-
       headings.forEach((heading) => {
         const isH3 = heading.tagName === 'H3';
         let displayTitle = heading.textContent.trim();
-
+        const a = document.createElement('a');
         if (!isH3) {
           h2Count++;
-          const a = document.createElement('a');
           a.className = 'sidebar-toc-item';
           a.innerHTML = `<span class="num">${h2Count}</span> <span>${displayTitle}</span>`;
-          a.onclick = (e) => { e.preventDefault(); scrollToHeading(heading); };
-          sidebarTocGrid.appendChild(a);
         } else {
-          const a = document.createElement('a');
           a.className = 'sidebar-toc-item sub';
           a.textContent = displayTitle;
-          a.onclick = (e) => { e.preventDefault(); scrollToHeading(heading); };
-          sidebarTocGrid.appendChild(a);
         }
+        a.onclick = (e) => {
+          e.preventDefault();
+          const y = heading.getBoundingClientRect().top + mainContentScroll.scrollTop - 20;
+          mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
+        };
+        sidebarTocGrid.appendChild(a);
       });
-    }
-
-    function scrollToHeading(heading) {
-      const yOffset = -20; 
-      const y = heading.getBoundingClientRect().top + mainContentScroll.scrollTop + yOffset;
-      mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
     }
 
     document.getElementById('newEntryBtn').onclick = () => {
@@ -350,6 +314,8 @@
       document.getElementById('editorTitle').textContent = '建立新條目';
       document.getElementById('editTitle').value = '';
       document.getElementById('editContent').value = '';
+      document.getElementById('visualTableWrap').classList.add('hidden');
+      document.getElementById('insertTableBtn').classList.add('hidden');
       welcomeScreen.classList.add('hidden');
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
@@ -363,6 +329,8 @@
       document.getElementById('editTitle').value = r.title;
       document.getElementById('editCategory').value = r.category;
       document.getElementById('editContent').value = r.content;
+      document.getElementById('visualTableWrap').classList.add('hidden');
+      document.getElementById('insertTableBtn').classList.add('hidden');
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
       tocContainer.classList.add('hidden');
@@ -407,11 +375,85 @@
       tocContainer.classList.add('hidden');
     };
 
-    document.getElementById('searchInput').addEventListener('input', e => {
-      keyword = e.target.value;
-      renderNav();
-    });
+    // ==========================================
+    // 🔥 以下是「視覺化表格編輯器」的邏輯
+    // ==========================================
+    
+    function generateTable() {
+      const rows = parseInt(document.getElementById('tblRows').value);
+      const cols = parseInt(document.getElementById('tblCols').value);
+      const table = document.getElementById('visualTable');
+      
+      table.innerHTML = '';
+      
+      // 建立表頭
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      for (let i = 0; i < cols; i++) {
+        const th = document.createElement('th');
+        th.innerHTML = `<input type="text" placeholder="標題 ${i+1}" value="${i===0 ? '路徑' : (i===cols-1 ? '魁首' : '')}">`;
+        trHead.appendChild(th);
+      }
+      thead.appendChild(trHead);
+      table.appendChild(thead);
 
+      // 建立內容
+      const tbody = document.createElement('tbody');
+      for (let r = 0; r < rows; r++) {
+        const tr = document.createElement('tr');
+        for (let c = 0; c < cols; c++) {
+          const td = document.createElement('td');
+          // 如果是第一欄或第二欄，預設給個提示
+          let placeholder = "輸入內容";
+          td.innerHTML = `<input type="text" placeholder="${placeholder}">`;
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      table.appendChild(tbody);
+
+      document.getElementById('visualTableWrap').classList.remove('hidden');
+      document.getElementById('insertTableBtn').classList.remove('hidden');
+    }
+
+    function insertTableToContent() {
+      const table = document.getElementById('visualTable');
+      let html = '<table style="width:100%; border-collapse:collapse; text-align:center; font-size: 14px;">\n';
+      
+      // 抓表頭
+      const heads = table.querySelectorAll('thead th');
+      html += '  <tr style="background:#eaecf0;">\n';
+      heads.forEach(th => {
+        const val = th.querySelector('input').value || '&nbsp;';
+        html += `    <th style="border:1px solid #a2a9b1; padding:10px;">${val}</th>\n`;
+      });
+      html += '  </tr>\n';
+
+      // 抓內容
+      const rows = table.querySelectorAll('tbody tr');
+      rows.forEach(tr => {
+        html += '  <tr>\n';
+        const tds = tr.querySelectorAll('td');
+        tds.forEach((td, index) => {
+          let val = td.querySelector('input').value || '&nbsp;';
+          // 第一欄加粗
+          if (index === 0) val = `<b>${val}</b>`;
+          html += `    <td style="border:1px solid #a2a9b1; padding:10px;">${val}</td>\n`;
+        });
+        html += '  </tr>\n';
+      });
+      html += '</table>\n\n';
+
+      // 插入到內文的最後方
+      const textarea = document.getElementById('editContent');
+      textarea.value += '\n\n' + html;
+      
+      alert('表格已插入到文章底部！你可以繼續編輯文字。');
+      document.getElementById('visualTableWrap').classList.add('hidden');
+      document.getElementById('insertTableBtn').classList.add('hidden');
+    }
+
+    // 啟動
     (async () => {
       const { data: { session } } = await db.auth.getSession();
       if (session) { showMain(); loadRecords(); }
