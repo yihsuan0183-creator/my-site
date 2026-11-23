@@ -74,13 +74,28 @@
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
     /* 表格樣式 (閱讀區) */
-    .article-body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; line-height: 1.5; text-align: center; }
-    .article-body th, .article-body td { border: 1px solid #a2a9b1; padding: 10px 12px; vertical-align: middle; white-space: nowrap; }
+    .article-body table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .article-body th, .article-body td {
+      border: 1px solid #a2a9b1;
+      padding: 10px 14px;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
     /* 編輯區 */
     .editor-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 4px; padding: 16px; margin-top: 16px; }
-    .editor-box input, .editor-box select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
+    .editor-box > input, .editor-box > select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 1rem; }
     
     /* 編輯器工具列 */
     .toolbar { display: flex; gap: 5px; padding: 10px; background: #fff; border: 1px solid #ccc; border-bottom: none; border-radius: 4px 4px 0 0; flex-wrap: wrap; align-items: center; }
@@ -90,23 +105,27 @@
 
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #rich-editor table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; text-align: center; }
+    #rich-editor th, #rich-editor td { border: 1px solid #a2a9b1; padding: 8px 10px; vertical-align: middle; }
+    #rich-editor th { background-color: #eaecf0; font-weight: bold; }
     #rich-editor h2 { font-size: 1.55rem; margin: 20px 0 10px; display: flex; align-items: center; font-weight: bold; }
     #rich-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
     #rich-editor h3 { font-size: 1.2rem; margin: 15px 0 10px; padding-left: 14px; border-left: 2px solid #4e6ef2; font-weight: bold; }
 
-    /* 🔥 視覺化表格編輯器區塊 */
+    /* 視覺化表格編輯器區塊 */
     #table-editor-section { display: none; background: #fff; border: 1px solid #4e6ef2; border-radius: 4px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(78, 110, 242, 0.15); }
     #table-editor-section h3 { font-size: 1.1rem; color: #4e6ef2; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     #table-editor-section .close-btn { background: #f33; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
     
-    .table-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-    .table-controls button { padding: 5px 10px; font-size: 0.85rem; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px; cursor: pointer; }
+    .table-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; align-items: center; }
+    .table-controls button { padding: 6px 10px; font-size: 0.85rem; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px; cursor: pointer; }
     .table-controls button:hover { background: #e6ecff; color: #4e6ef2; border-color: #4e6ef2; }
+    .table-tip { font-size: 0.8rem; color: #888; margin-bottom: 8px; }
 
-    .visual-table-wrap { overflow-x: auto; margin-bottom: 15px; border: 1px solid #ddd; max-height: 400px; }
-    .visual-table { border-collapse: collapse; width: 100%; min-width: 600px; background: #fff; }
+    .visual-table-wrap { overflow-x: auto; margin-bottom: 10px; border: 1px solid #ddd; max-height: 400px; }
+    .visual-table { border-collapse: collapse; width: 100%; min-width: 480px; background: #fff; }
     .visual-table th, .visual-table td { border: 1px solid #ccc; padding: 0; position: relative; }
-    .visual-table input { border: none; width: 100%; padding: 10px; text-align: center; font-size: 0.95rem; outline: none; background: transparent; }
+    .visual-table input { border: none; width: 100%; padding: 10px 8px; text-align: center; font-size: 0.95rem; outline: none; background: transparent; margin: 0; }
     .visual-table input:focus { background: #f0f4ff; }
     .visual-table th input { font-weight: bold; background: #f8f9fa; }
 
@@ -118,10 +137,12 @@
       .top-navbar .btn { padding: 6px 10px; font-size: 0.82rem; }
       .top-navbar .search-box { order: 3; flex: 1 1 100%; max-width: none; }
       .layout { flex-direction: column; }
-      .sidebar { width: 100%; max-height: 150px; border-right: none; border-bottom: 1px solid #ebebeb; padding: 8px 0; }
+      .sidebar { width: 100%; max-height: 160px; border-right: none; border-bottom: 1px solid #ebebeb; padding: 8px 0; }
       .toc-item { padding: 6px 14px; font-size: 0.9rem; }
-      #tocContainer { display: block !important; max-height: 120px; overflow-y: auto; }
+      #tocContainer { max-height: 120px; overflow-y: auto; margin-top: 8px !important; padding-top: 8px !important; }
       .main-content { padding: 18px 16px 40px; }
+      #welcomeScreen { margin-top: 36px !important; }
+      #welcomeScreen h1 { font-size: 1.5rem !important; }
       .article-header h1 { font-size: 1.65rem; }
       .article-body h2 { font-size: 1.3rem; margin: 24px 0 12px; }
       .article-body h3 { font-size: 1.1rem; margin: 20px 0 10px; }
@@ -150,7 +171,7 @@
       </div>
       <div class="search-box">
         <input type="text" id="searchInput" placeholder="搜尋百科條目...">
-        <button>搜尋</button>
+        <button id="searchBtn">搜尋</button>
       </div>
     </div>
 
@@ -203,34 +224,35 @@
 
             <!-- 基礎工具列 -->
             <div class="toolbar">
-              <button onclick="formatDoc('undo')" title="復原 (Ctrl+Z)">↩️ 復原</button>
-              <button onclick="formatDoc('redo')" title="重做 (Ctrl+Y)">↪️ 重做</button>
+              <button type="button" onclick="formatDoc('undo')" title="復原 (Ctrl+Z)">↩️ 復原</button>
+              <button type="button" onclick="formatDoc('redo')" title="重做 (Ctrl+Y)">↪️ 重做</button>
               <div class="divider"></div>
-              <button onclick="formatDoc('formatBlock', 'h2')">大標題</button>
-              <button onclick="formatDoc('formatBlock', 'h3')">小標題</button>
-              <button onclick="formatDoc('formatBlock', 'p')">內文</button>
+              <button type="button" onclick="formatDoc('formatBlock', 'h2')">大標題</button>
+              <button type="button" onclick="formatDoc('formatBlock', 'h3')">小標題</button>
+              <button type="button" onclick="formatDoc('formatBlock', 'p')">內文</button>
               <div class="divider"></div>
-              <button onclick="formatDoc('bold')"><b>B</b></button>
-              <button onclick="formatDoc('italic')"><i>I</i></button>
+              <button type="button" onclick="formatDoc('bold')"><b>B</b></button>
+              <button type="button" onclick="formatDoc('italic')"><i>I</i></button>
               <div class="divider"></div>
-              <button onclick="openTableEditor()" style="background:#4e6ef2; color:#fff;">📊 開啟表格編輯器</button>
+              <button type="button" onclick="openTableEditor()" style="background:#4e6ef2; color:#fff; border-color:#4e6ef2;">📊 開啟表格編輯器</button>
             </div>
 
-            <!-- 🔥 視覺化表格編輯器區塊 -->
+            <!-- 視覺化表格編輯器區塊 -->
             <div id="table-editor-section">
               <h3>
                 <span>📊 表格編輯器</span>
-                <button class="close-btn" onclick="closeTableEditor()">✖ 關閉</button>
+                <button type="button" class="close-btn" onclick="closeTableEditor()">✖ 關閉</button>
               </h3>
               
               <div class="table-controls">
-                <input type="number" id="tblRows" value="3" min="1" max="30" style="width: 60px; padding: 5px; border:1px solid #ccc;">
+                <input type="number" id="tblRows" value="3" min="1" max="30" style="width: 60px; padding: 5px; border:1px solid #ccc; border-radius:4px;">
                 <span>列 x</span>
-                <input type="number" id="tblCols" value="3" min="1" max="15" style="width: 60px; padding: 5px; border:1px solid #ccc;">
+                <input type="number" id="tblCols" value="3" min="1" max="15" style="width: 60px; padding: 5px; border:1px solid #ccc; border-radius:4px;">
                 <span>欄</span>
-                <button onclick="generateVisualTable()" style="background:#4e6ef2; color:#fff; border:none;">生成/重置表格</button>
-                <button onclick="insertVisualTableToContent()" style="background:#28a745; color:#fff; border:none;">✔️ 插入至文章</button>
+                <button type="button" onclick="generateVisualTable()" style="background:#4e6ef2; color:#fff; border:none;">生成/重置表格</button>
+                <button type="button" onclick="insertVisualTableToContent()" style="background:#28a745; color:#fff; border:none;">✔️ 插入至文章</button>
               </div>
+              <p class="table-tip">💡 提示：同一格內若要分行，可用「/」隔開（例如：天下陣解/萬物御）。</p>
 
               <div class="visual-table-wrap">
                 <table class="visual-table" id="visualTable"></table>
@@ -278,6 +300,14 @@
 
     function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
     function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
 
     document.getElementById('loginBtn').onclick = async () => {
       const email = document.getElementById('email').value.trim();
@@ -445,9 +475,22 @@
       tocContainer.classList.add('hidden');
     };
 
-    document.getElementById('searchInput').addEventListener('input', e => {
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('input', e => {
       keyword = e.target.value;
       renderNav();
+    });
+    document.getElementById('searchBtn').onclick = () => {
+      keyword = searchInput.value;
+      renderNav();
+      searchInput.blur();
+    };
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        keyword = searchInput.value;
+        renderNav();
+        searchInput.blur();
+      }
     });
 
     function formatDoc(cmd, value = null) {
@@ -456,37 +499,38 @@
     }
 
     // ==========================================
-    // 🔥 視覺化表格編輯器邏輯
+    // 視覺化表格編輯器邏輯
     // ==========================================
 
     function openTableEditor() {
       tableEditorSection.style.display = 'block';
+      if (visualTable.innerHTML.trim() === '') {
+        generateVisualTable();
+      }
     }
 
     function closeTableEditor() {
       tableEditorSection.style.display = 'none';
     }
 
-    // 生成 Excel 樣式的表格
     function generateVisualTable() {
-      const rows = parseInt(document.getElementById('tblRows').value);
-      const cols = parseInt(document.getElementById('tblCols').value);
-      if (!rows || !cols) return;
+      const rows = parseInt(document.getElementById('tblRows').value, 10);
+      const cols = parseInt(document.getElementById('tblCols').value, 10);
+      if (!rows || !cols || rows < 1 || cols < 1) return;
 
       visualTable.innerHTML = '';
       
-      // 建立表頭
       const thead = document.createElement('thead');
       const trHead = document.createElement('tr');
       for (let i = 0; i < cols; i++) {
         const th = document.createElement('th');
-        th.innerHTML = `<input type="text" placeholder="標題 ${i+1}" value="${i===0 ? '路徑' : (i===cols-1 ? '魁首' : '')}">`;
+        const defaultVal = i === 0 ? '路徑' : (i === cols - 1 && cols > 1 ? '魁首' : '');
+        th.innerHTML = `<input type="text" placeholder="標題 ${i + 1}" value="${defaultVal}">`;
         trHead.appendChild(th);
       }
       thead.appendChild(trHead);
       visualTable.appendChild(thead);
 
-      // 建立內容
       const tbody = document.createElement('tbody');
       for (let r = 0; r < rows - 1; r++) {
         const tr = document.createElement('tr');
@@ -500,42 +544,43 @@
       visualTable.appendChild(tbody);
     }
 
-    // 將表格轉成 HTML 並插入到文章中
+    function formatCellText(raw) {
+      const trimmed = raw.trim();
+      if (!trimmed) return '&nbsp;';
+      return trimmed
+        .split('/')
+        .map(part => escapeHtml(part.trim()))
+        .join('<br>');
+    }
+
     function insertVisualTableToContent() {
       if (visualTable.innerHTML.trim() === '') {
-        alert('請先點擊「生成/重置表格」'); return;
+        alert('請先點擊「生成/重置表格」');
+        return;
       }
 
-      let html = '<table style="width:100%; border-collapse:collapse; text-align:center; font-size: 14px; margin-bottom: 20px;">\n';
-      
-      // 抓表頭
+      let html = '<table><thead><tr>';
       const heads = visualTable.querySelectorAll('thead th');
-      html += '  <tr style="background:#eaecf0;">\n';
       heads.forEach(th => {
-        const val = th.querySelector('input').value || '&nbsp;';
-        html += `    <th style="border:1px solid #a2a9b1; padding:10px;">${val}</th>\n`;
+        const val = formatCellText(th.querySelector('input').value);
+        html += `<th>${val}</th>`;
       });
-      html += '  </tr>\n';
+      html += '</tr></thead><tbody>';
 
-      // 抓內容
       const rows = visualTable.querySelectorAll('tbody tr');
       rows.forEach(tr => {
-        html += '  <tr>\n';
+        html += '<tr>';
         const tds = tr.querySelectorAll('td');
         tds.forEach((td, index) => {
-          let val = td.querySelector('input').value || '&nbsp;';
-          // 第一欄加粗
-          if (index === 0) val = `<b>${val}</b>`;
-          html += `    <td style="border:1px solid #a2a9b1; padding:10px;">${val}</td>\n`;
+          let val = formatCellText(td.querySelector('input').value);
+          if (index === 0 && val !== '&nbsp;') val = `<b>${val}</b>`;
+          html += `<td>${val}</td>`;
         });
-        html += '  </tr>\n';
+        html += '</tr>';
       });
-      html += '</table>\n\n';
+      html += '</tbody></table><p><br></p>';
 
-      // 插入到內文
       richEditor.innerHTML += html;
-      
-      alert('表格已插入到文章底部！');
       closeTableEditor();
       richEditor.focus();
     }
