@@ -104,7 +104,7 @@
     .toolbar button.danger-tool:hover { background: #ffe6e6; color: #d92626; border-color: #f33; }
     .toolbar .divider { width: 1px; height: 20px; background: #ccc; margin: 0 5px; }
 
-    /* 編輯器本體（與閱讀區表格對齊一致） */
+    /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     #rich-editor table {
       display: block;
@@ -267,11 +267,12 @@
                 <span>列 x</span>
                 <input type="number" id="tblCols" value="3" min="1" max="15" style="width: 60px; padding: 5px; border:1px solid #ccc; border-radius:4px;">
                 <span>欄</span>
-                <button type="button" onclick="generateVisualTable()" style="background:#4e6ef2; color:#fff; border:none;">生成/重置表格</button>
+                <button type="button" onclick="generateVisualTable()" style="background:#4e6ef2; color:#fff; border:none;">生成/重置</button>
                 <button type="button" onclick="addVisualRow()">+ 加一列</button>
                 <button type="button" onclick="addVisualCol()">+ 加一欄</button>
-                <button type="button" onclick="insertVisualTableToContent()" style="background:#28a745; color:#fff; border:none;">✔️ 儲存/插入表格</button>
-                <button type="button" onclick="deleteActiveTable()" style="background:#f33; color:#fff; border:none;">🗑️ 刪除此表格</button>
+                <button type="button" onclick="removeVisualRow()" style="color:#d92626; border-color:#f33;">- 刪一列</button>
+                <button type="button" onclick="removeVisualCol()" style="color:#d92626; border-color:#f33;">- 刪一欄</button>
+                <button type="button" onclick="insertVisualTableToContent()" style="background:#28a745; color:#fff; border:none; margin-left: 10px;">✔️ 儲存/插入</button>
               </div>
               <p class="table-tip">💡 提示：點選文章中的表格後再按「📊 表格編輯器」可直接修改該表格；同一格內若要分行，可用「/」隔開（例如：天下陣解/萬物御）。</p>
 
@@ -539,233 +540,4 @@
       }
     });
 
-    function formatDoc(cmd, value = null) {
-      document.execCommand(cmd, false, value);
-      richEditor.focus();
-    }
-
-    // ==========================================
-    // 視覺化表格編輯器與刪除表格邏輯
-    // ==========================================
-
-    function cellHtmlToPlain(cellEl) {
-      const clone = cellEl.cloneNode(true);
-      clone.querySelectorAll('br').forEach(br => br.replaceWith('/'));
-      const text = clone.textContent.replace(/\u00a0/g, ' ').trim();
-      if (text === '') return '';
-      return text.split('/').map(s => s.trim()).filter(Boolean).join('/');
-    }
-
-    function loadTableIntoVisualEditor(tableEl) {
-      const allRows = Array.from(tableEl.querySelectorAll('tr'));
-      if (allRows.length === 0) return;
-
-      const parsedRows = allRows.map(tr =>
-        Array.from(tr.children).map(cell => cellHtmlToPlain(cell))
-      );
-      const rowCount = parsedRows.length;
-      const colCount = Math.max(...parsedRows.map(r => r.length), 1);
-
-      document.getElementById('tblRows').value = rowCount;
-      document.getElementById('tblCols').value = colCount;
-
-      visualTable.innerHTML = '';
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
-      for (let c = 0; c < colCount; c++) {
-        const th = document.createElement('th');
-        const val = parsedRows[0][c] || '';
-        th.innerHTML = `<input type="text" placeholder="標題 ${c + 1}" value="${escapeHtml(val)}">`;
-        trHead.appendChild(th);
-      }
-      thead.appendChild(trHead);
-      visualTable.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      for (let r = 1; r < rowCount; r++) {
-        const tr = document.createElement('tr');
-        for (let c = 0; c < colCount; c++) {
-          const td = document.createElement('td');
-          const val = (parsedRows[r] && parsedRows[r][c]) || '';
-          td.innerHTML = `<input type="text" placeholder="內容" value="${escapeHtml(val)}">`;
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-      }
-      visualTable.appendChild(tbody);
-    }
-
-    function openTableEditor() {
-      tableEditorSection.style.display = 'block';
-      const label = document.getElementById('tableEditorModeLabel');
-      if (activeEditorTable && richEditor.contains(activeEditorTable)) {
-        label.textContent = '📊 表格編輯器（正在編輯已選取的表格）';
-        loadTableIntoVisualEditor(activeEditorTable);
-      } else {
-        label.textContent = '📊 表格編輯器（新增表格）';
-        if (visualTable.innerHTML.trim() === '') {
-          generateVisualTable();
-        }
-      }
-    }
-
-    function closeTableEditor() {
-      tableEditorSection.style.display = 'none';
-    }
-
-    function generateVisualTable() {
-      const rows = parseInt(document.getElementById('tblRows').value, 10);
-      const cols = parseInt(document.getElementById('tblCols').value, 10);
-      if (!rows || !cols || rows < 1 || cols < 1) return;
-
-      visualTable.innerHTML = '';
-      
-      const thead = document.createElement('thead');
-      const trHead = document.createElement('tr');
-      for (let i = 0; i < cols; i++) {
-        const th = document.createElement('th');
-        const defaultVal = i === 0 ? '路徑' : (i === cols - 1 && cols > 1 ? '魁首' : '');
-        th.innerHTML = `<input type="text" placeholder="標題 ${i + 1}" value="${defaultVal}">`;
-        trHead.appendChild(th);
-      }
-      thead.appendChild(trHead);
-      visualTable.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      for (let r = 0; r < rows - 1; r++) {
-        const tr = document.createElement('tr');
-        for (let c = 0; c < cols; c++) {
-          const td = document.createElement('td');
-          td.innerHTML = `<input type="text" placeholder="內容">`;
-          tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-      }
-      visualTable.appendChild(tbody);
-    }
-
-    function addVisualRow() {
-      if (!visualTable.querySelector('thead')) generateVisualTable();
-      let tbody = visualTable.querySelector('tbody');
-      if (!tbody) {
-        tbody = document.createElement('tbody');
-        visualTable.appendChild(tbody);
-      }
-      const cols = visualTable.querySelectorAll('thead th').length || 1;
-      const tr = document.createElement('tr');
-      for (let c = 0; c < cols; c++) {
-        const td = document.createElement('td');
-        td.innerHTML = `<input type="text" placeholder="內容">`;
-        tr.appendChild(td);
-      }
-      tbody.appendChild(tr);
-      document.getElementById('tblRows').value = visualTable.querySelectorAll('tr').length;
-    }
-
-    function addVisualCol() {
-      if (!visualTable.querySelector('thead')) generateVisualTable();
-      const headTr = visualTable.querySelector('thead tr');
-      const colIndex = headTr.children.length;
-      const th = document.createElement('th');
-      th.innerHTML = `<input type="text" placeholder="標題 ${colIndex + 1}">`;
-      headTr.appendChild(th);
-
-      visualTable.querySelectorAll('tbody tr').forEach(tr => {
-        const td = document.createElement('td');
-        td.innerHTML = `<input type="text" placeholder="內容">`;
-        tr.appendChild(td);
-      });
-      document.getElementById('tblCols').value = headTr.children.length;
-    }
-
-    function formatCellText(raw) {
-      const trimmed = raw.trim();
-      if (!trimmed) return '&nbsp;';
-      return trimmed
-        .split('/')
-        .map(part => escapeHtml(part.trim()))
-        .filter(Boolean)
-        .join('<br>') || '&nbsp;';
-    }
-
-    function buildTableElementFromVisual() {
-      let html = '<table><thead><tr>';
-      const heads = visualTable.querySelectorAll('thead th');
-      heads.forEach(th => {
-        const val = formatCellText(th.querySelector('input').value);
-        html += `<th>${val}</th>`;
-      });
-      html += '</tr></thead><tbody>';
-
-      const rows = visualTable.querySelectorAll('tbody tr');
-      rows.forEach(tr => {
-        html += '<tr>';
-        const tds = tr.querySelectorAll('td');
-        tds.forEach((td, index) => {
-          let val = formatCellText(td.querySelector('input').value);
-          if (index === 0 && val !== '&nbsp;') val = `<b>${val}</b>`;
-          html += `<td>${val}</td>`;
-        });
-        html += '</tr>';
-      });
-      html += '</tbody></table>';
-
-      const temp = document.createElement('div');
-      temp.innerHTML = html;
-      return temp.firstElementChild;
-    }
-
-    function insertVisualTableToContent() {
-      if (visualTable.innerHTML.trim() === '') {
-        alert('請先點擊「生成/重置表格」');
-        return;
-      }
-
-      const newTable = buildTableElementFromVisual();
-      if (activeEditorTable && richEditor.contains(activeEditorTable)) {
-        activeEditorTable.replaceWith(newTable);
-        selectTableInEditor(newTable);
-      } else {
-        const trailingP = document.createElement('p');
-        trailingP.innerHTML = '<br>';
-        richEditor.appendChild(newTable);
-        richEditor.appendChild(trailingP);
-        selectTableInEditor(newTable);
-      }
-
-      closeTableEditor();
-      richEditor.focus();
-    }
-
-    function deleteActiveTable() {
-      const tables = Array.from(richEditor.querySelectorAll('table'));
-      if (tables.length === 0) {
-        alert('目前文章中沒有表格');
-        return;
-      }
-
-      let target = activeEditorTable && richEditor.contains(activeEditorTable)
-        ? activeEditorTable
-        : tables[tables.length - 1];
-
-      if (!confirm('確定要刪除這張表格嗎？')) return;
-
-      const nextEl = target.nextElementSibling;
-      target.remove();
-      if (nextEl && nextEl.tagName === 'P' && nextEl.innerHTML.trim() === '<br>') {
-        nextEl.remove();
-      }
-      activeEditorTable = null;
-      closeTableEditor();
-      richEditor.focus();
-    }
-
-    // 啟動
-    (async () => {
-      const { data: { session } } = await db.auth.getSession();
-      if (session) { showMain(); loadRecords(); }
-      else showAuth();
-    })();
-  </script>
-</body>
-</html>
+    function formatDoc(cmd,
