@@ -86,14 +86,7 @@
     .toolbar { display: flex; gap: 5px; padding: 10px; background: #fff; border: 1px solid #ccc; border-bottom: none; border-radius: 4px 4px 0 0; flex-wrap: wrap; align-items: center; }
     .toolbar button { padding: 6px 10px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
     .toolbar button:hover { background: #e6ecff; color: #4e6ef2; }
-    .toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
     .toolbar .divider { width: 1px; height: 20px; background: #ccc; margin: 0 5px; }
-
-    /* 動態表格工具列 */
-    #table-tools { display: none; background: #eef1f6; padding: 8px 10px; border-radius: 4px; gap: 8px; align-items: center; margin-bottom: 8px; border: 1px dashed #4e6ef2; }
-    #table-tools span { font-size: 0.85rem; color: #4e6ef2; font-weight: bold; }
-    #table-tools button { padding: 4px 8px; font-size: 0.8rem; background: #fff; border: 1px solid #4e6ef2; color: #4e6ef2; border-radius: 4px; cursor: pointer; }
-    #table-tools button:hover { background: #4e6ef2; color: #fff; }
 
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -101,26 +94,21 @@
     #rich-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
     #rich-editor h3 { font-size: 1.2rem; margin: 15px 0 10px; padding-left: 14px; border-left: 2px solid #4e6ef2; font-weight: bold; }
 
-    /* 🔥 編輯器內的表格樣式 (完美對齊閱讀區) */
-    #rich-editor table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin: 10px 0; 
-      table-layout: fixed; /* 讓欄寬平均分配，不會因為字多字少而歪掉 */
-    }
-    #rich-editor th, #rich-editor td { 
-      border: 1px solid #a2a9b1; 
-      padding: 10px 12px; 
-      text-align: center; 
-      vertical-align: middle; 
-      word-wrap: break-word; /* 長字強制換行 */
-      white-space: normal; /* 允許正常換行 */
-      line-height: 1.5;
-    }
-    #rich-editor th { 
-      background-color: #eaecf0; 
-      font-weight: bold; 
-    }
+    /* 🔥 視覺化表格編輯器區塊 */
+    #table-editor-section { display: none; background: #fff; border: 1px solid #4e6ef2; border-radius: 4px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(78, 110, 242, 0.15); }
+    #table-editor-section h3 { font-size: 1.1rem; color: #4e6ef2; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    #table-editor-section .close-btn { background: #f33; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+    
+    .table-controls { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+    .table-controls button { padding: 5px 10px; font-size: 0.85rem; border: 1px solid #ccc; background: #f8f9fa; border-radius: 4px; cursor: pointer; }
+    .table-controls button:hover { background: #e6ecff; color: #4e6ef2; border-color: #4e6ef2; }
+
+    .visual-table-wrap { overflow-x: auto; margin-bottom: 15px; border: 1px solid #ddd; max-height: 400px; }
+    .visual-table { border-collapse: collapse; width: 100%; min-width: 600px; background: #fff; }
+    .visual-table th, .visual-table td { border: 1px solid #ccc; padding: 0; position: relative; }
+    .visual-table input { border: none; width: 100%; padding: 10px; text-align: center; font-size: 0.95rem; outline: none; background: transparent; }
+    .visual-table input:focus { background: #f0f4ff; }
+    .visual-table th input { font-weight: bold; background: #f8f9fa; }
 
     /* 手機響應式 */
     @media (max-width: 768px) {
@@ -225,18 +213,30 @@
               <button onclick="formatDoc('bold')"><b>B</b></button>
               <button onclick="formatDoc('italic')"><i>I</i></button>
               <div class="divider"></div>
-              <button onclick="insertTablePrompt()">📊 插入表格</button>
+              <button onclick="openTableEditor()" style="background:#4e6ef2; color:#fff;">📊 開啟表格編輯器</button>
             </div>
 
-            <!-- 表格專屬工具列 -->
-            <div id="table-tools">
-              <span>🛠️ 表格工具：</span>
-              <button onclick="addRow()">➕ 新增列 (下)</button>
-              <button onclick="addCol()">➕ 新增欄 (右)</button>
-              <button onclick="delRow()" style="border-color: #f33; color: #f33;">❌ 刪除列</button>
-              <button onclick="delCol()" style="border-color: #f33; color: #f33;">❌ 刪除欄</button>
+            <!-- 🔥 視覺化表格編輯器區塊 -->
+            <div id="table-editor-section">
+              <h3>
+                <span>📊 表格編輯器</span>
+                <button class="close-btn" onclick="closeTableEditor()">✖ 關閉</button>
+              </h3>
+              
+              <div class="table-controls">
+                <input type="number" id="tblRows" value="3" min="1" max="30" style="width: 60px; padding: 5px; border:1px solid #ccc;">
+                <span>列 x</span>
+                <input type="number" id="tblCols" value="3" min="1" max="15" style="width: 60px; padding: 5px; border:1px solid #ccc;">
+                <span>欄</span>
+                <button onclick="generateVisualTable()" style="background:#4e6ef2; color:#fff; border:none;">生成/重置表格</button>
+                <button onclick="insertVisualTableToContent()" style="background:#28a745; color:#fff; border:none;">✔️ 插入至文章</button>
+              </div>
+
+              <div class="visual-table-wrap">
+                <table class="visual-table" id="visualTable"></table>
+              </div>
             </div>
-            
+
             <div id="rich-editor" contenteditable="true"></div>
             
             <div style="margin-top: 15px;">
@@ -268,12 +268,13 @@
     const tocContainer = document.getElementById('tocContainer');
     const sidebarTocGrid = document.getElementById('sidebarTocGrid');
     const richEditor = document.getElementById('rich-editor');
-    const tableTools = document.getElementById('table-tools');
+    
+    const tableEditorSection = document.getElementById('table-editor-section');
+    const visualTable = document.getElementById('visualTable');
 
     let records = [];
     let currentId = null;
     let keyword = '';
-    let currentTableCell = null; 
 
     function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
     function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
@@ -378,7 +379,7 @@
       document.getElementById('editorTitle').textContent = '建立新條目';
       document.getElementById('editTitle').value = '';
       richEditor.innerHTML = ''; 
-      tableTools.style.display = 'none';
+      closeTableEditor();
       welcomeScreen.classList.add('hidden');
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
@@ -398,7 +399,7 @@
         richEditor.innerHTML = marked.parse(r.content);
       }
       
-      tableTools.style.display = 'none';
+      closeTableEditor();
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
       tocContainer.classList.add('hidden');
@@ -454,94 +455,92 @@
       richEditor.focus();
     }
 
-    function insertTablePrompt() {
-      const rows = parseInt(prompt("請輸入表格列數（包含表頭）：", "3"));
-      const cols = parseInt(prompt("請輸入表格欄數：", "3"));
+    // ==========================================
+    // 🔥 視覺化表格編輯器邏輯
+    // ==========================================
+
+    function openTableEditor() {
+      tableEditorSection.style.display = 'block';
+    }
+
+    function closeTableEditor() {
+      tableEditorSection.style.display = 'none';
+    }
+
+    // 生成 Excel 樣式的表格
+    function generateVisualTable() {
+      const rows = parseInt(document.getElementById('tblRows').value);
+      const cols = parseInt(document.getElementById('tblCols').value);
       if (!rows || !cols) return;
 
-      let tableHTML = '<table><thead><tr>';
-      for (let c = 0; c < cols; c++) tableHTML += `<th>標題</th>`;
-      tableHTML += '</tr></thead><tbody>';
-      for (let r = 1; r < rows; r++) {
-        tableHTML += '<tr>';
-        for (let c = 0; c < cols; c++) tableHTML += `<td>內容</td>`;
-        tableHTML += '</tr>';
-      }
-      tableHTML += '</tbody></table><p><br></p>';
-      document.execCommand('insertHTML', false, tableHTML);
-      richEditor.focus();
-    }
-
-    // ==========================================
-    // 🔥 表格動態編輯邏輯
-    // ==========================================
-
-    richEditor.addEventListener('click', (e) => {
-      let target = e.target;
-      if (target.tagName === 'TD' || target.tagName === 'TH') {
-        currentTableCell = target;
-        tableTools.style.display = 'flex';
-      } else {
-        currentTableCell = null;
-        tableTools.style.display = 'none';
-      }
-    });
-
-    function addRow() {
-      if (!currentTableCell) return;
-      const tr = currentTableCell.parentElement;
-      const newTr = tr.cloneNode(true);
-      Array.from(newTr.children).forEach(cell => cell.innerHTML = '&nbsp;');
-      tr.after(newTr);
-      richEditor.focus();
-    }
-
-    function addCol() {
-      if (!currentTableCell) return;
-      const cellIndex = Array.from(currentTableCell.parentElement.children).indexOf(currentTableCell);
-      const table = currentTableCell.closest('table');
+      visualTable.innerHTML = '';
       
-      Array.from(table.rows).forEach(row => {
-        const isHeader = row.parentElement.tagName === 'THEAD';
-        const newCell = document.createElement(isHeader ? 'th' : 'td');
-        newCell.innerHTML = isHeader ? '標題' : '&nbsp;';
-        row.children[cellIndex].after(newCell);
+      // 建立表頭
+      const thead = document.createElement('thead');
+      const trHead = document.createElement('tr');
+      for (let i = 0; i < cols; i++) {
+        const th = document.createElement('th');
+        th.innerHTML = `<input type="text" placeholder="標題 ${i+1}" value="${i===0 ? '路徑' : (i===cols-1 ? '魁首' : '')}">`;
+        trHead.appendChild(th);
+      }
+      thead.appendChild(trHead);
+      visualTable.appendChild(thead);
+
+      // 建立內容
+      const tbody = document.createElement('tbody');
+      for (let r = 0; r < rows - 1; r++) {
+        const tr = document.createElement('tr');
+        for (let c = 0; c < cols; c++) {
+          const td = document.createElement('td');
+          td.innerHTML = `<input type="text" placeholder="內容">`;
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      visualTable.appendChild(tbody);
+    }
+
+    // 將表格轉成 HTML 並插入到文章中
+    function insertVisualTableToContent() {
+      if (visualTable.innerHTML.trim() === '') {
+        alert('請先點擊「生成/重置表格」'); return;
+      }
+
+      let html = '<table style="width:100%; border-collapse:collapse; text-align:center; font-size: 14px; margin-bottom: 20px;">\n';
+      
+      // 抓表頭
+      const heads = visualTable.querySelectorAll('thead th');
+      html += '  <tr style="background:#eaecf0;">\n';
+      heads.forEach(th => {
+        const val = th.querySelector('input').value || '&nbsp;';
+        html += `    <th style="border:1px solid #a2a9b1; padding:10px;">${val}</th>\n`;
       });
-      richEditor.focus();
-    }
+      html += '  </tr>\n';
 
-    function delRow() {
-      if (!currentTableCell) return;
-      const tr = currentTableCell.parentElement;
-      if (tr.parentElement.rows.length <= 1) {
-        tr.closest('table').remove();
-        tableTools.style.display = 'none';
-      } else {
-        tr.remove();
-      }
-      currentTableCell = null;
-      tableTools.style.display = 'none';
-      richEditor.focus();
-    }
-
-    function delCol() {
-      if (!currentTableCell) return;
-      const cellIndex = Array.from(currentTableCell.parentElement.children).indexOf(currentTableCell);
-      const table = currentTableCell.closest('table');
-      
-      if (table.rows[0].children.length <= 1) {
-        table.remove();
-        tableTools.style.display = 'none';
-      } else {
-        Array.from(table.rows).forEach(row => {
-          row.children[cellIndex].remove();
+      // 抓內容
+      const rows = visualTable.querySelectorAll('tbody tr');
+      rows.forEach(tr => {
+        html += '  <tr>\n';
+        const tds = tr.querySelectorAll('td');
+        tds.forEach((td, index) => {
+          let val = td.querySelector('input').value || '&nbsp;';
+          // 第一欄加粗
+          if (index === 0) val = `<b>${val}</b>`;
+          html += `    <td style="border:1px solid #a2a9b1; padding:10px;">${val}</td>\n`;
         });
-      }
-      currentTableCell = null;
-      tableTools.style.display = 'none';
+        html += '  </tr>\n';
+      });
+      html += '</table>\n\n';
+
+      // 插入到內文
+      richEditor.innerHTML += html;
+      
+      alert('表格已插入到文章底部！');
+      closeTableEditor();
       richEditor.focus();
     }
 
+    // 啟動
     (async () => {
       const { data: { session } } = await db.auth.getSession();
       if (session) { showMain(); loadRecords(); }
