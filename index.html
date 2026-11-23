@@ -73,6 +73,7 @@
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
+    /* 表格樣式 (閱讀區) */
     .article-body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; margin: 20px 0; font-size: 0.95rem; line-height: 1.5; text-align: center; }
     .article-body th, .article-body td { border: 1px solid #a2a9b1; padding: 10px 12px; vertical-align: middle; white-space: nowrap; }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
@@ -88,7 +89,7 @@
     .toolbar button:disabled { opacity: 0.5; cursor: not-allowed; }
     .toolbar .divider { width: 1px; height: 20px; background: #ccc; margin: 0 5px; }
 
-    /* 動態表格工具列 (預設隱藏，游標在表格內時顯示) */
+    /* 動態表格工具列 */
     #table-tools { display: none; background: #eef1f6; padding: 8px 10px; border-radius: 4px; gap: 8px; align-items: center; margin-bottom: 8px; border: 1px dashed #4e6ef2; }
     #table-tools span { font-size: 0.85rem; color: #4e6ef2; font-weight: bold; }
     #table-tools button { padding: 4px 8px; font-size: 0.8rem; background: #fff; border: 1px solid #4e6ef2; color: #4e6ef2; border-radius: 4px; cursor: pointer; }
@@ -96,12 +97,30 @@
 
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    #rich-editor table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-    #rich-editor th, #rich-editor td { border: 1px solid #a2a9b1; padding: 8px 10px; text-align: center; vertical-align: middle; }
-    #rich-editor th { background-color: #eaecf0; }
     #rich-editor h2 { font-size: 1.55rem; margin: 20px 0 10px; display: flex; align-items: center; font-weight: bold; }
     #rich-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
     #rich-editor h3 { font-size: 1.2rem; margin: 15px 0 10px; padding-left: 14px; border-left: 2px solid #4e6ef2; font-weight: bold; }
+
+    /* 🔥 編輯器內的表格樣式 (完美對齊閱讀區) */
+    #rich-editor table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin: 10px 0; 
+      table-layout: fixed; /* 讓欄寬平均分配，不會因為字多字少而歪掉 */
+    }
+    #rich-editor th, #rich-editor td { 
+      border: 1px solid #a2a9b1; 
+      padding: 10px 12px; 
+      text-align: center; 
+      vertical-align: middle; 
+      word-wrap: break-word; /* 長字強制換行 */
+      white-space: normal; /* 允許正常換行 */
+      line-height: 1.5;
+    }
+    #rich-editor th { 
+      background-color: #eaecf0; 
+      font-weight: bold; 
+    }
 
     /* 手機響應式 */
     @media (max-width: 768px) {
@@ -194,7 +213,7 @@
               <option value="設定">設定</option>
             </select>
 
-            <!-- 基礎工具列 (加入了復原/重做) -->
+            <!-- 基礎工具列 -->
             <div class="toolbar">
               <button onclick="formatDoc('undo')" title="復原 (Ctrl+Z)">↩️ 復原</button>
               <button onclick="formatDoc('redo')" title="重做 (Ctrl+Y)">↪️ 重做</button>
@@ -209,7 +228,7 @@
               <button onclick="insertTablePrompt()">📊 插入表格</button>
             </div>
 
-            <!-- 表格專屬工具列 (游標點在表格內才會出現) -->
+            <!-- 表格專屬工具列 -->
             <div id="table-tools">
               <span>🛠️ 表格工具：</span>
               <button onclick="addRow()">➕ 新增列 (下)</button>
@@ -254,7 +273,7 @@
     let records = [];
     let currentId = null;
     let keyword = '';
-    let currentTableCell = null; // 記錄目前游標所在的表格格子
+    let currentTableCell = null; 
 
     function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
     function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
@@ -454,10 +473,9 @@
     }
 
     // ==========================================
-    // 🔥 表格動態編輯邏輯 (新增/刪除單一列/欄)
+    // 🔥 表格動態編輯邏輯
     // ==========================================
 
-    // 監聽編輯器點擊事件，判斷游標是否在表格內
     richEditor.addEventListener('click', (e) => {
       let target = e.target;
       if (target.tagName === 'TD' || target.tagName === 'TH') {
@@ -469,24 +487,20 @@
       }
     });
 
-    // 新增列 (在目前游標所在列的下方)
     function addRow() {
       if (!currentTableCell) return;
       const tr = currentTableCell.parentElement;
       const newTr = tr.cloneNode(true);
-      // 清空新列的文字內容
       Array.from(newTr.children).forEach(cell => cell.innerHTML = '&nbsp;');
       tr.after(newTr);
       richEditor.focus();
     }
 
-    // 新增欄 (在目前游標所在欄的右側)
     function addCol() {
       if (!currentTableCell) return;
       const cellIndex = Array.from(currentTableCell.parentElement.children).indexOf(currentTableCell);
       const table = currentTableCell.closest('table');
       
-      // 對每一列進行新增
       Array.from(table.rows).forEach(row => {
         const isHeader = row.parentElement.tagName === 'THEAD';
         const newCell = document.createElement(isHeader ? 'th' : 'td');
@@ -496,11 +510,9 @@
       richEditor.focus();
     }
 
-    // 刪除列
     function delRow() {
       if (!currentTableCell) return;
       const tr = currentTableCell.parentElement;
-      // 如果是最後一列，直接把整個表格刪除
       if (tr.parentElement.rows.length <= 1) {
         tr.closest('table').remove();
         tableTools.style.display = 'none';
@@ -512,13 +524,11 @@
       richEditor.focus();
     }
 
-    // 刪除欄
     function delCol() {
       if (!currentTableCell) return;
       const cellIndex = Array.from(currentTableCell.parentElement.children).indexOf(currentTableCell);
       const table = currentTableCell.closest('table');
       
-      // 如果只剩一欄，直接刪除整個表格
       if (table.rows[0].children.length <= 1) {
         table.remove();
         tableTools.style.display = 'none';
