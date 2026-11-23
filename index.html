@@ -73,23 +73,23 @@
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
-    /* 🔥 表格樣式 (閱讀區) - 支援自動換行 */
+    /* 表格樣式 (閱讀區) */
     .article-body table {
-      width: 100%;
+      display: block;
       max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border-collapse: collapse;
       margin: 20px 0;
       font-size: 0.95rem;
       line-height: 1.5;
       text-align: center;
-      table-layout: fixed; /* 讓欄位寬度平均分配 */
     }
     .article-body th, .article-body td {
       border: 1px solid #a2a9b1;
       padding: 10px 14px;
       vertical-align: middle;
-      word-wrap: break-word; /* 單字太長強制斷行 */
-      white-space: normal; /* 允許正常換行 */
+      white-space: nowrap;
     }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
@@ -106,24 +106,22 @@
 
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    
-    /* 🔥 編輯器內的表格樣式 - 支援自動換行 */
     #rich-editor table {
-      width: 100%;
+      display: block;
       max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border-collapse: collapse;
       margin: 14px 0;
       font-size: 0.95rem;
       line-height: 1.5;
       text-align: center;
-      table-layout: fixed;
     }
     #rich-editor th, #rich-editor td {
       border: 1px solid #a2a9b1;
       padding: 8px 12px;
       vertical-align: middle;
-      word-wrap: break-word;
-      white-space: normal;
+      white-space: nowrap;
     }
     #rich-editor th { background-color: #eaecf0; font-weight: bold; }
     #rich-editor table.selected-table { outline: 2px solid #4e6ef2; }
