@@ -73,7 +73,7 @@
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
-    /* 表格樣式 (閱讀區) */
+    /* 表格樣式 (閱讀區) - 強制橫書、自動換行 */
     .article-body table {
       width: 100%;
       max-width: 100%;
@@ -109,7 +109,7 @@
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     
-    /* 編輯器內的表格樣式 */
+    /* 編輯器內的表格樣式 - 強制橫書、自動換行 */
     #rich-editor table {
       width: 100%;
       max-width: 100%;
@@ -481,6 +481,7 @@
         richEditor.innerHTML = marked.parse(r.content);
       }
       
+      // 🔥 確保最底部有一個可編輯的空白段落
       if (richEditor.lastElementChild && richEditor.lastElementChild.tagName !== 'P') {
         const p = document.createElement('p');
         p.innerHTML = '<br>';
@@ -557,20 +558,24 @@
       richEditor.focus();
     }
 
+    // 🔥 修正大標題 Bug：建立標題後自動生成新段落，並將游標移過去
     function formatHeading(tag) {
       document.execCommand('formatBlock', false, tag);
+      
       let sel = window.getSelection();
       if (sel.rangeCount > 0) {
         let node = sel.anchorNode;
         while (node && node !== richEditor) {
           if (node.tagName && node.tagName.toLowerCase() === tag) {
             let nextEl = node.nextElementSibling;
+            // 如果標題下方沒有段落，或者下方又是另一個標題，就塞入新段落
             if (!nextEl || (nextEl.tagName === 'H2' || nextEl.tagName === 'H3')) {
               const p = document.createElement('p');
               p.innerHTML = '<br>';
               node.after(p);
               nextEl = p;
             }
+            // 將游標移動到新段落
             const range = document.createRange();
             range.setStart(nextEl, 0);
             range.collapse(true);
@@ -785,14 +790,25 @@
       }
 
       const newTable = buildTableElementFromVisual();
+      
+      // 🔥 在插入表格時，強制在上下補上空白行，避免無法在表格前後打字
       if (activeEditorTable && richEditor.contains(activeEditorTable)) {
+        const pTop = document.createElement('p');
+        pTop.innerHTML = '<br>';
+        const pBottom = document.createElement('p');
+        pBottom.innerHTML = '<br>';
+        
+        activeEditorTable.before(pTop);
         activeEditorTable.replaceWith(newTable);
+        newTable.after(pBottom);
+        
         selectTableInEditor(newTable);
       } else {
         const pTop = document.createElement('p');
         pTop.innerHTML = '<br>';
         const pBottom = document.createElement('p');
         pBottom.innerHTML = '<br>';
+        
         richEditor.appendChild(pTop);
         richEditor.appendChild(newTable);
         richEditor.appendChild(pBottom);
@@ -826,6 +842,7 @@
       richEditor.focus();
     }
 
+    // 啟動
     (async () => {
       const { data: { session } } = await db.auth.getSession();
       if (session) { showMain(); loadRecords(); }
