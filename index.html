@@ -54,7 +54,7 @@
     .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.92rem; border-left: 3px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toc-item:hover { background: #eef1f6; color: #4e6ef2; }
     .sidebar-toc-grid { display: flex; flex-direction: column; gap: 2px; padding: 10px 20px; }
-    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; line-height: 1.6; display: flex; align-items: flex-start; text-decoration: none; }
+    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; line-height: 1.6; display: flex; align-items: flex-start; }
     .sidebar-toc-item:hover { text-decoration: underline; }
     .sidebar-toc-item .num { width: 20px; flex-shrink: 0; font-family: Arial; }
     .sidebar-toc-item.sub { padding-left: 20px; position: relative; font-size: 0.9rem; color: #666; }
@@ -73,28 +73,23 @@
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
-    /* 表格樣式 (閱讀區) - 強制橫書與換行 */
+    /* 表格樣式 (閱讀區) */
     .article-body table {
-      width: 100%;
+      display: block;
       max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border-collapse: collapse;
       margin: 20px 0;
       font-size: 0.95rem;
       line-height: 1.5;
       text-align: center;
-      table-layout: fixed;
-      writing-mode: horizontal-tb !important;
-      direction: ltr !important;
     }
     .article-body th, .article-body td {
       border: 1px solid #a2a9b1;
       padding: 10px 14px;
       vertical-align: middle;
-      word-wrap: break-word;
-      white-space: normal;
-      writing-mode: horizontal-tb !important;
-      text-orientation: mixed !important;
-      text-align: center;
+      white-space: nowrap;
     }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
@@ -111,29 +106,22 @@
 
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    
-    /* 編輯器內的表格樣式 - 強制橫書與換行 */
     #rich-editor table {
-      width: 100%;
+      display: block;
       max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border-collapse: collapse;
       margin: 14px 0;
       font-size: 0.95rem;
       line-height: 1.5;
       text-align: center;
-      table-layout: fixed;
-      writing-mode: horizontal-tb !important;
-      direction: ltr !important;
     }
     #rich-editor th, #rich-editor td {
       border: 1px solid #a2a9b1;
       padding: 8px 12px;
       vertical-align: middle;
-      word-wrap: break-word;
-      white-space: normal;
-      writing-mode: horizontal-tb !important;
-      text-orientation: mixed !important;
-      text-align: center;
+      white-space: nowrap;
     }
     #rich-editor th { background-color: #eaecf0; font-weight: bold; }
     #rich-editor table.selected-table { outline: 2px solid #4e6ef2; }
@@ -256,9 +244,9 @@
               <button type="button" onclick="formatDoc('undo')" title="復原 (Ctrl+Z)">↩️ 復原</button>
               <button type="button" onclick="formatDoc('redo')" title="重做 (Ctrl+Y)">↪️ 重做</button>
               <div class="divider"></div>
-              <button type="button" onclick="formatHeading('h2')">大標題</button>
-              <button type="button" onclick="formatHeading('h3')">小標題</button>
-              <button type="button" onclick="formatHeading('p')">內文</button>
+              <button type="button" onclick="formatDoc('formatBlock', 'h2')">大標題</button>
+              <button type="button" onclick="formatDoc('formatBlock', 'h3')">小標題</button>
+              <button type="button" onclick="formatDoc('formatBlock', 'p')">內文</button>
               <div class="divider"></div>
               <button type="button" onclick="formatDoc('bold')"><b>B</b></button>
               <button type="button" onclick="formatDoc('italic')"><i>I</i></button>
@@ -308,7 +296,7 @@
 
   <script>
     const SUPABASE_URL = 'https://vshfxcygviqsxxnanxzd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0';
+    const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0'; 
 
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true }
@@ -324,7 +312,7 @@
     const tocContainer = document.getElementById('tocContainer');
     const sidebarTocGrid = document.getElementById('sidebarTocGrid');
     const richEditor = document.getElementById('rich-editor');
-
+    
     const tableEditorSection = document.getElementById('table-editor-section');
     const visualTable = document.getElementById('visualTable');
 
@@ -333,31 +321,15 @@
     let keyword = '';
     let activeEditorTable = null;
 
-    function showAuth() {
-      authView.classList.remove('hidden');
-      mainView.classList.add('hidden');
-    }
-
-    function showMain() {
-      authView.classList.add('hidden');
-      mainView.classList.remove('hidden');
-    }
+    function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
+    function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
 
     function escapeHtml(str) {
-      return String(str)
+      return str
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
-    }
-
-    function formatSlashCellHtml(rawVal) {
-      const parts = String(rawVal)
-        .split('/')
-        .map(s => s.trim())
-        .filter(Boolean);
-      if (parts.length === 0) return '<br>';
-      return parts.map(escapeHtml).join('<br>');
     }
 
     function clearSelectedTableHighlight() {
@@ -384,51 +356,27 @@
     document.getElementById('loginBtn').onclick = async () => {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      document.getElementById('authMsg').textContent = '';
       const { error } = await db.auth.signInWithPassword({ email, password });
-      if (error) {
-        document.getElementById('authMsg').textContent = error.message;
-      } else {
-        showMain();
-        await loadRecords();
-      }
+      if (error) document.getElementById('authMsg').textContent = error.message;
+      else { showMain(); loadRecords(); }
     };
-
     document.getElementById('signupBtn').onclick = async () => {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      document.getElementById('authMsg').textContent = '';
       const { error } = await db.auth.signUp({ email, password });
-      if (error) {
-        document.getElementById('authMsg').textContent = error.message;
-      } else {
-        document.getElementById('authMsg').textContent = '註冊成功，請登入。';
-      }
+      if (error) document.getElementById('authMsg').textContent = error.message;
+      else document.getElementById('authMsg').textContent = '註冊成功，請登入。';
     };
-
-    document.getElementById('logoutBtn').onclick = async () => {
-      await db.auth.signOut();
-      currentId = null;
-      records = [];
-      showAuth();
-    };
+    document.getElementById('logoutBtn').onclick = async () => { await db.auth.signOut(); showAuth(); };
 
     async function loadRecords() {
-      const { data, error } = await db
-        .from('records')
-        .select('*')
-        .order('created_at', { ascending: true });
-      if (!error && Array.isArray(data)) {
-        records = data;
-        renderNav();
-      }
+      const { data, error } = await db.from('records').select('*').order('created_at', { ascending: true });
+      if (!error) { records = data; renderNav(); }
     }
 
     function renderNav() {
       navList.innerHTML = '';
-      const filtered = records.filter(r =>
-        (r.title || '').toLowerCase().includes(keyword.toLowerCase())
-      );
+      const filtered = records.filter(r => r.title.toLowerCase().includes(keyword.toLowerCase()));
       filtered.forEach(r => {
         const div = document.createElement('div');
         div.className = 'toc-item';
@@ -447,24 +395,21 @@
       const r = records.find(x => x.id === id);
       if (!r) return;
       currentId = id;
-
+      
       document.getElementById('viewTitle').textContent = r.title;
-      document.getElementById('viewCategory').textContent = '分類：' + (r.category || '未分類');
-      document.getElementById('viewDate').textContent = r.created_at
-        ? new Date(r.created_at).toLocaleString('zh-TW')
-        : '';
-
-      const rawContent = r.content || '';
-      if (rawContent.includes('<') && rawContent.includes('>')) {
-        document.getElementById('viewContent').innerHTML = rawContent;
+      document.getElementById('viewCategory').textContent = '分類：' + r.category;
+      document.getElementById('viewDate').textContent = new Date(r.created_at).toLocaleString('zh-TW');
+      
+      if (r.content.includes('<') && r.content.includes('>')) {
+        document.getElementById('viewContent').innerHTML = r.content;
       } else {
-        document.getElementById('viewContent').innerHTML = marked.parse(rawContent);
+        document.getElementById('viewContent').innerHTML = marked.parse(r.content);
       }
 
       welcomeScreen.classList.add('hidden');
       editor.classList.add('hidden');
       viewer.classList.remove('hidden');
-
+      
       generateTOC();
       renderNav();
       mainContentScroll.scrollTop = 0;
@@ -474,22 +419,18 @@
       sidebarTocGrid.innerHTML = '';
       const contentDiv = document.getElementById('viewContent');
       const headings = contentDiv.querySelectorAll('h2, h3');
-
-      if (headings.length < 1) {
-        tocContainer.classList.add('hidden');
-        return;
-      }
+      
+      if (headings.length < 1) { tocContainer.classList.add('hidden'); return; }
       tocContainer.classList.remove('hidden');
 
       let h2Count = 0;
       headings.forEach((heading) => {
         const isH3 = heading.tagName === 'H3';
-        const displayTitle = heading.textContent.trim();
+        let displayTitle = heading.textContent.trim();
         const a = document.createElement('a');
-        a.href = '#';
         a.onclick = (e) => {
           e.preventDefault();
-          const yOffset = -20;
+          const yOffset = -20; 
           const containerTop = mainContentScroll.getBoundingClientRect().top;
           const y = heading.getBoundingClientRect().top - containerTop + mainContentScroll.scrollTop + yOffset;
           mainContentScroll.scrollTo({ top: y, behavior: 'smooth' });
@@ -498,7 +439,7 @@
         if (!isH3) {
           h2Count++;
           a.className = 'sidebar-toc-item';
-          a.innerHTML = `<span class="num">${h2Count}</span> <span>${escapeHtml(displayTitle)}</span>`;
+          a.innerHTML = `<span class="num">h2Count</span><span>{displayTitle}</span>`;
         } else {
           a.className = 'sidebar-toc-item sub';
           a.textContent = displayTitle;
@@ -512,8 +453,7 @@
       selectTableInEditor(null);
       document.getElementById('editorTitle').textContent = '建立新條目';
       document.getElementById('editTitle').value = '';
-      document.getElementById('editCategory').value = '未分類';
-      richEditor.innerHTML = '<p><br></p>';
+      richEditor.innerHTML = ''; 
       closeTableEditor();
       welcomeScreen.classList.add('hidden');
       viewer.classList.add('hidden');
@@ -527,21 +467,14 @@
       selectTableInEditor(null);
       document.getElementById('editorTitle').textContent = '編輯條目：' + r.title;
       document.getElementById('editTitle').value = r.title;
-      document.getElementById('editCategory').value = r.category || '未分類';
-
-      const rawContent = r.content || '';
-      if (rawContent.includes('<') && rawContent.includes('>')) {
-        richEditor.innerHTML = rawContent;
+      document.getElementById('editCategory').value = r.category;
+      
+      if (r.content.includes('<') && r.content.includes('>')) {
+        richEditor.innerHTML = r.content;
       } else {
-        richEditor.innerHTML = marked.parse(rawContent);
+        richEditor.innerHTML = marked.parse(r.content);
       }
-
-      if (richEditor.lastElementChild && richEditor.lastElementChild.tagName !== 'P') {
-        const p = document.createElement('p');
-        p.innerHTML = '<br>';
-        richEditor.appendChild(p);
-      }
-
+      
       closeTableEditor();
       viewer.classList.add('hidden');
       editor.classList.remove('hidden');
@@ -549,63 +482,27 @@
     };
 
     document.getElementById('cancelBtn').onclick = () => {
-      if (currentId) {
-        viewRecord(currentId);
-      } else {
-        welcomeScreen.classList.remove('hidden');
-        editor.classList.add('hidden');
-      }
+      if (currentId) viewRecord(currentId);
+      else { welcomeScreen.classList.remove('hidden'); editor.classList.add('hidden'); }
     };
 
     document.getElementById('saveBtn').onclick = async () => {
       clearSelectedTableHighlight();
-
-      const tables = richEditor.querySelectorAll('table');
-      tables.forEach(table => {
-        table.removeAttribute('style');
-        table.style.width = '100%';
-        table.style.borderCollapse = 'collapse';
-
-        const cells = table.querySelectorAll('th, td');
-        cells.forEach(cell => {
-          cell.removeAttribute('style');
-          cell.style.writingMode = 'horizontal-tb';
-        });
-      });
-
       const title = document.getElementById('editTitle').value.trim();
       const category = document.getElementById('editCategory').value;
       const content = richEditor.innerHTML;
-
-      if (!title || richEditor.innerText.trim() === '') {
-        alert('請填寫標題與內容');
-        return;
-      }
+      
+      if (!title || richEditor.innerText.trim() === '') { alert('請填寫標題與內容'); return; }
 
       if (currentId) {
-        const { error } = await db
-          .from('records')
-          .update({ title, category, content })
-          .eq('id', currentId);
-        if (error) {
-          alert('更新失敗：' + error.message);
-          return;
-        }
+        const { error } = await db.from('records').update({ title, category, content }).eq('id', currentId);
+        if (error) { alert('更新失敗：' + error.message); return; }
         const idx = records.findIndex(x => x.id === currentId);
-        if (idx !== -1) {
-          records[idx] = { ...records[idx], title, category, content };
-        }
+        records[idx] = { ...records[idx], title, category, content };
       } else {
         const { data: { user } } = await db.auth.getUser();
-        const { data, error } = await db
-          .from('records')
-          .insert({ user_id: user.id, title, category, content })
-          .select()
-          .single();
-        if (error) {
-          alert('新增失敗：' + error.message);
-          return;
-        }
+        const { data, error } = await db.from('records').insert({ user_id: user.id, title, category, content }).select().single();
+        if (error) { alert('新增失敗：' + error.message); return; }
         records.push(data);
         currentId = data.id;
       }
@@ -616,10 +513,7 @@
     document.getElementById('deleteBtn').onclick = async () => {
       if (!confirm('確定要刪除嗎？')) return;
       const { error } = await db.from('records').delete().eq('id', currentId);
-      if (error) {
-        alert('刪除失敗：' + error.message);
-        return;
-      }
+      if (error) { alert('刪除失敗：' + error.message); return; }
       records = records.filter(x => x.id !== currentId);
       currentId = null;
       renderNav();
@@ -651,40 +545,9 @@
       richEditor.focus();
     }
 
-    function formatHeading(tag) {
-      const sel = window.getSelection();
-      if (!sel || sel.rangeCount === 0) return;
-
-      const range = sel.getRangeAt(0);
-
-      if (!range.collapsed) {
-        document.execCommand('formatBlock', false, tag);
-      } else {
-        const p = document.createElement('p');
-        p.innerHTML = '<br>';
-        const h = document.createElement(tag);
-        h.textContent = '標題文字';
-
-        range.insertNode(p);
-        range.insertNode(h);
-
-        range.selectNodeContents(h);
-        sel.removeAllRanges();
-        sel.addRange(range);
-      }
-      richEditor.focus();
-    }
-
     // ==========================================
     // 視覺化表格編輯器與刪除表格邏輯
     // ==========================================
-
-    function syncRowColInputs() {
-      const headCols = visualTable.querySelectorAll('thead th').length;
-      const bodyRows = visualTable.querySelectorAll('tbody tr').length;
-      document.getElementById('tblRows').value = Math.max(1, (headCols > 0 ? 1 : 0) + bodyRows);
-      document.getElementById('tblCols').value = Math.max(1, headCols);
-    }
 
     function cellHtmlToPlain(cellEl) {
       const clone = cellEl.cloneNode(true);
@@ -713,7 +576,7 @@
       for (let c = 0; c < colCount; c++) {
         const th = document.createElement('th');
         const val = parsedRows[0][c] || '';
-        th.innerHTML = `<input type="text" placeholder="標題 ${c + 1}" value="${escapeHtml(val)}">`;
+        th.innerHTML = `<input type="text" placeholder="標題 c+1"value="{escapeHtml(val)}">`;
         trHead.appendChild(th);
       }
       thead.appendChild(trHead);
@@ -757,19 +620,20 @@
       if (!rows || !cols || rows < 1 || cols < 1) return;
 
       visualTable.innerHTML = '';
-
+      
       const thead = document.createElement('thead');
       const trHead = document.createElement('tr');
-      for (let c = 0; c < cols; c++) {
+      for (let i = 0; i < cols; i++) {
         const th = document.createElement('th');
-        th.innerHTML = `<input type="text" placeholder="標題 ${c + 1}">`;
+        const defaultVal = i === 0 ? '路徑' : (i === cols - 1 && cols > 1 ? '魁首' : '');
+        th.innerHTML = `<input type="text" placeholder="標題 i+1"value="{defaultVal}">`;
         trHead.appendChild(th);
       }
       thead.appendChild(trHead);
       visualTable.appendChild(thead);
 
       const tbody = document.createElement('tbody');
-      for (let r = 1; r < rows; r++) {
+      for (let r = 0; r < rows - 1; r++) {
         const tr = document.createElement('tr');
         for (let c = 0; c < cols; c++) {
           const td = document.createElement('td');
@@ -779,16 +643,16 @@
         tbody.appendChild(tr);
       }
       visualTable.appendChild(tbody);
-      syncRowColInputs();
     }
 
     function addVisualRow() {
+      if (!visualTable.querySelector('thead')) generateVisualTable();
       let tbody = visualTable.querySelector('tbody');
       if (!tbody) {
         tbody = document.createElement('tbody');
         visualTable.appendChild(tbody);
       }
-      const cols = Math.max(1, visualTable.querySelectorAll('thead th').length);
+      const cols = visualTable.querySelectorAll('thead th').length || 1;
       const tr = document.createElement('tr');
       for (let c = 0; c < cols; c++) {
         const td = document.createElement('td');
@@ -796,154 +660,136 @@
         tr.appendChild(td);
       }
       tbody.appendChild(tr);
-      syncRowColInputs();
+      document.getElementById('tblRows').value = visualTable.querySelectorAll('tr').length;
     }
 
     function addVisualCol() {
-      const theadTr = visualTable.querySelector('thead tr');
-      if (theadTr) {
-        const idx = theadTr.children.length + 1;
-        const th = document.createElement('th');
-        th.innerHTML = `<input type="text" placeholder="標題 ${idx}">`;
-        theadTr.appendChild(th);
-      }
+      if (!visualTable.querySelector('thead')) generateVisualTable();
+      const headTr = visualTable.querySelector('thead tr');
+      const colIndex = headTr.children.length;
+      const th = document.createElement('th');
+      th.innerHTML = `<input type="text" placeholder="標題 ${colIndex + 1}">`;
+      headTr.appendChild(th);
+
       visualTable.querySelectorAll('tbody tr').forEach(tr => {
         const td = document.createElement('td');
         td.innerHTML = `<input type="text" placeholder="內容">`;
         tr.appendChild(td);
       });
-      syncRowColInputs();
+      document.getElementById('tblCols').value = headTr.children.length;
     }
 
     function removeVisualRow() {
-      const tbodyRows = visualTable.querySelectorAll('tbody tr');
-      if (tbodyRows.length > 0) {
-        tbodyRows[tbodyRows.length - 1].remove();
+      const tbody = visualTable.querySelector('tbody');
+      if (!tbody || tbody.children.length === 0) {
+        alert('沒有可刪除的資料列（至少保留表頭）');
+        return;
       }
-      syncRowColInputs();
+      tbody.lastElementChild.remove();
+      document.getElementById('tblRows').value = visualTable.querySelectorAll('tr').length;
     }
 
     function removeVisualCol() {
-      const theadTr = visualTable.querySelector('thead tr');
-      const colCount = theadTr ? theadTr.children.length : 0;
-      if (colCount <= 1) return;
-
-      if (theadTr && theadTr.lastElementChild) {
-        theadTr.lastElementChild.remove();
+      const headTr = visualTable.querySelector('thead tr');
+      if (!headTr || headTr.children.length <= 1) {
+        alert('至少需要保留一欄');
+        return;
       }
+      headTr.lastElementChild.remove();
       visualTable.querySelectorAll('tbody tr').forEach(tr => {
-        if (tr.lastElementChild) {
-          tr.lastElementChild.remove();
-        }
+        if (tr.lastElementChild) tr.lastElementChild.remove();
       });
-      syncRowColInputs();
+      document.getElementById('tblCols').value = headTr.children.length;
+    }
+
+    function formatCellText(raw) {
+      const trimmed = raw.trim();
+      if (!trimmed) return '&nbsp;';
+      return trimmed
+        .split('/')
+        .map(part => escapeHtml(part.trim()))
+        .filter(Boolean)
+        .join('<br>') || '&nbsp;';
+    }
+
+    function buildTableElementFromVisual() {
+      let html = '<table><thead><tr>';
+      const heads = visualTable.querySelectorAll('thead th');
+      heads.forEach(th => {
+        const val = formatCellText(th.querySelector('input').value);
+        html += `<th>${val}</th>`;
+      });
+      html += '</tr></thead><tbody>';
+
+      const rows = visualTable.querySelectorAll('tbody tr');
+      rows.forEach(tr => {
+        html += '<tr>';
+        const tds = tr.querySelectorAll('td');
+        tds.forEach((td, index) => {
+          let val = formatCellText(td.querySelector('input').value);
+          if (index === 0 && val !== '&nbsp;') val = `<b>${val}</b>`;
+          html += `<td>${val}</td>`;
+        });
+        html += '</tr>';
+      });
+      html += '</tbody></table>';
+
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      return temp.firstElementChild;
     }
 
     function insertVisualTableToContent() {
-      const headInputs = Array.from(visualTable.querySelectorAll('thead th input'));
-      const bodyRows = Array.from(visualTable.querySelectorAll('tbody tr'));
-      const colCount = Math.max(1, headInputs.length);
-
-      const newTable = document.createElement('table');
-
-      if (headInputs.length > 0) {
-        const thead = document.createElement('thead');
-        const tr = document.createElement('tr');
-        for (let c = 0; c < colCount; c++) {
-          const th = document.createElement('th');
-          th.innerHTML = formatSlashCellHtml(headInputs[c] ? headInputs[c].value : '');
-          tr.appendChild(th);
-        }
-        thead.appendChild(tr);
-        newTable.appendChild(thead);
+      if (visualTable.innerHTML.trim() === '') {
+        alert('請先點擊「生成/重置」');
+        return;
       }
 
-      if (bodyRows.length > 0) {
-        const tbody = document.createElement('tbody');
-        bodyRows.forEach(rowEl => {
-          const inputs = Array.from(rowEl.querySelectorAll('td input'));
-          const tr = document.createElement('tr');
-          for (let c = 0; c < colCount; c++) {
-            const td = document.createElement('td');
-            td.innerHTML = formatSlashCellHtml(inputs[c] ? inputs[c].value : '');
-            tr.appendChild(td);
-          }
-          tbody.appendChild(tr);
-        });
-        newTable.appendChild(tbody);
-      }
-
+      const newTable = buildTableElementFromVisual();
       if (activeEditorTable && richEditor.contains(activeEditorTable)) {
         activeEditorTable.replaceWith(newTable);
+        selectTableInEditor(newTable);
       } else {
-        const sel = window.getSelection();
-        let inserted = false;
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          if (richEditor.contains(range.commonAncestorContainer)) {
-            range.deleteContents();
-            range.insertNode(newTable);
-            inserted = true;
-          }
-        }
-        if (!inserted) {
-          richEditor.appendChild(newTable);
-        }
-
-        const afterP = document.createElement('p');
-        afterP.innerHTML = '<br>';
-        newTable.after(afterP);
+        const trailingP = document.createElement('p');
+        trailingP.innerHTML = '<br>';
+        richEditor.appendChild(newTable);
+        richEditor.appendChild(trailingP);
+        selectTableInEditor(newTable);
       }
 
-      selectTableInEditor(newTable);
       closeTableEditor();
       richEditor.focus();
     }
 
     function deleteActiveTable() {
-      if (!activeEditorTable || !richEditor.contains(activeEditorTable)) {
-        alert('請先在編輯區中點選要刪除的表格');
+      const tables = Array.from(richEditor.querySelectorAll('table'));
+      if (tables.length === 0) {
+        alert('目前文章中沒有表格');
         return;
       }
-      if (!confirm('確定要刪除這個表格嗎？')) return;
 
-      const nextSibling = activeEditorTable.nextElementSibling;
-      activeEditorTable.remove();
-      activeEditorTable = null;
+      let target = activeEditorTable && richEditor.contains(activeEditorTable)
+        ? activeEditorTable
+        : tables[tables.length - 1];
 
-      if (!nextSibling && richEditor.childNodes.length === 0) {
-        richEditor.innerHTML = '<p><br></p>';
+      if (!confirm('確定要刪除這張表格嗎？')) return;
+
+      const nextEl = target.nextElementSibling;
+      target.remove();
+      if (nextEl && nextEl.tagName === 'P' && nextEl.innerHTML.trim() === '<br>') {
+        nextEl.remove();
       }
+      activeEditorTable = null;
       closeTableEditor();
       richEditor.focus();
     }
 
-    // ==========================================
-    // 初始化與登入狀態監聽
-    // ==========================================
-
-    async function initApp() {
+    // 啟動
+    (async () => {
       const { data: { session } } = await db.auth.getSession();
-      if (session) {
-        showMain();
-        await loadRecords();
-      } else {
-        showAuth();
-      }
-
-      db.auth.onAuthStateChange(async (event, currentSession) => {
-        if (event === 'SIGNED_IN' && currentSession) {
-          showMain();
-          await loadRecords();
-        } else if (event === 'SIGNED_OUT') {
-          currentId = null;
-          records = [];
-          showAuth();
-        }
-      });
-    }
-
-    initApp();
+      if (session) { showMain(); loadRecords(); }
+      else showAuth();
+    })();
   </script>
 </body>
 </html>
