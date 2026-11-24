@@ -446,8 +446,19 @@
       return p;
     }
 
+    function cleanEmptyHeadings() {
+      richEditor.querySelectorAll('h2, h3').forEach(heading => {
+        if (heading.textContent.replace(/\u00a0/g, '').trim() === '') {
+          const p = document.createElement('p');
+          p.innerHTML = '<br>';
+          heading.replaceWith(p);
+        }
+      });
+    }
+
     function normalizeEditorBlocks() {
       wrapTablesInScrollContainer(richEditor);
+      cleanEmptyHeadings();
 
       Array.from(richEditor.childNodes).forEach(node => {
         if (node.nodeType === Node.TEXT_NODE) {
@@ -488,10 +499,39 @@
     richEditor.addEventListener('keyup', saveSelection);
     richEditor.addEventListener('mouseup', saveSelection);
     richEditor.addEventListener('input', () => {
+      cleanEmptyHeadings();
       saveSelection();
     });
 
     richEditor.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const node = range.startContainer;
+          const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+          const heading = el?.closest('h2, h3');
+
+          if (heading && richEditor.contains(heading) && range.collapsed) {
+            const currentText = heading.textContent.replace(/\u00a0/g, '').trim();
+            if (currentText.length <= 1) {
+              e.preventDefault();
+              const p = document.createElement('p');
+              p.innerHTML = '<br>';
+              heading.replaceWith(p);
+
+              const newRange = document.createRange();
+              newRange.setStart(p, 0);
+              newRange.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(newRange);
+              saveSelection();
+              return;
+            }
+          }
+        }
+      }
+
       if (e.key === 'Enter' && !e.shiftKey) {
         const sel = window.getSelection();
         if (!sel || sel.rangeCount === 0) return;
@@ -784,6 +824,7 @@
       richEditor.focus();
       restoreSelection();
       document.execCommand(cmd, false, value);
+      cleanEmptyHeadings();
       saveSelection();
     }
 
@@ -791,6 +832,7 @@
       richEditor.focus();
       restoreSelection();
       document.execCommand('formatBlock', false, tagName.toUpperCase());
+      cleanEmptyHeadings();
 
       const sel = window.getSelection();
       if (sel && sel.rangeCount > 0) {
