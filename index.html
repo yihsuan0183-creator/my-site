@@ -54,7 +54,7 @@
     .toc-item { cursor: pointer; color: #333; padding: 8px 20px; font-size: 0.92rem; border-left: 3px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .toc-item:hover { background: #eef1f6; color: #4e6ef2; }
     .sidebar-toc-grid { display: flex; flex-direction: column; gap: 2px; padding: 10px 20px; }
-    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; line-height: 1.6; display: flex; align-items: flex-start; }
+    .sidebar-toc-item { font-size: 0.95rem; color: #4e6ef2; cursor: pointer; line-height: 1.6; display: flex; align-items: flex-start; text-decoration: none; }
     .sidebar-toc-item:hover { text-decoration: underline; }
     .sidebar-toc-item .num { width: 20px; flex-shrink: 0; font-family: Arial; }
     .sidebar-toc-item.sub { padding-left: 20px; position: relative; font-size: 0.9rem; color: #666; }
@@ -194,8 +194,8 @@
   <div id="authView" class="auth-view hidden">
     <div class="auth-card">
       <h1>我的百科</h1>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="密碼">
+      <input type="email" id="email" placeholder="Email" autocomplete="email">
+      <input type="password" id="password" placeholder="密碼" autocomplete="current-password">
       <button id="loginBtn">登入</button>
       <button id="signupBtn" class="ghost">註冊</button>
       <p id="authMsg" style="color:#f33; font-size:0.85rem; text-align:center;"></p>
@@ -322,10 +322,6 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0';
     const MAX_CHARS_PER_LINE = 10; // 每一行最多幾個字便換行
 
-    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: true, autoRefreshToken: true }
-    });
-
     const authView = document.getElementById('authView');
     const mainView = document.getElementById('mainView');
     const navList = document.getElementById('navList');
@@ -340,14 +336,37 @@
     const tableEditorSection = document.getElementById('table-editor-section');
     const visualTable = document.getElementById('visualTable');
 
+    const db = (window.supabase && typeof window.supabase.createClient === 'function')
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          auth: { persistSession: true, autoRefreshToken: true }
+        })
+      : null;
+
     let records = [];
     let currentId = null;
     let keyword = '';
     let activeEditorTable = null;
     let savedEditorRange = null;
 
-    function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
-    function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
+    function showAuth(msg = '') {
+      authView.classList.remove('hidden');
+      mainView.classList.add('hidden');
+      if (msg) {
+        document.getElementById('authMsg').textContent = msg;
+      }
+    }
+
+    function showMain() {
+      authView.classList.add('hidden');
+      mainView.classList.remove('hidden');
+    }
+
+    function renderMarkdownSafe(mdText) {
+      if (window.marked && typeof window.marked.parse === 'function') {
+        return window.marked.parse(mdText);
+      }
+      return escapeHtml(mdText).replace(/\n/g, '<br>');
+    }
 
     function escapeHtml(str) {
       return String(str)
@@ -505,29 +524,66 @@
     });
 
     document.getElementById('loginBtn').onclick = async () => {
+      if (!db) {
+        document.getElementById('authMsg').textContent = 'Supabase 尚未載入，請檢查網路或稍後再試。';
+        return;
+      }
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const { error } = await db.auth.signInWithPassword({ email, password });
-      if (error) document.getElementById('authMsg').textContent = error.message;
-      else { showMain(); loadRecords(); }
+      document.getElementById('authMsg').textContent = '';
+      try {
+        const { error } = await db.auth.signInWithPassword({ email, password });
+        if (error) {
+          document.getElementById('authMsg').textContent = error.message;
+        } else {
+          showMain();
+          await loadRecords();
+        }
+      } catch (err) {
+        document.getElementById('authMsg').textContent = '登入連線失敗：' + (err?.message || err);
+      }
     };
+
     document.getElementById('signupBtn').onclick = async () => {
+      if (!db) {
+        document.getElementById('authMsg').textContent = 'Supabase 尚未載入，請檢查網路或稍後再試。';
+        return;
+      }
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
-      const { error } = await db.auth.signUp({ email, password });
-      if (error) document.getElementById('authMsg').textContent = error.message;
-      else document.getElementById('authMsg').textContent = '註冊成功，請登入。';
+      document.getElementById('authMsg').textContent = '';
+      try {
+        const { error } = await db.auth.signUp({ email, password });
+        if (error) {
+          document.getElementById('authMsg').textContent = error.message;
+        } else {
+          document.getElementById('authMsg').textContent = '註冊成功，請登入。';
+        }
+      } catch (err) {
+        document.getElementById('authMsg').textContent = '註冊連線失敗：' + (err?.message || err);
+      }
     };
+
     document.getElementById('logoutBtn').onclick = async () => {
-      await db.auth.signOut();
+      try {
+        if (db) await db.auth.signOut();
+      } catch (_) {}
       currentId = null;
       records = [];
       showAuth();
     };
 
     async function loadRecords() {
-      const { data, error } = await db.from('records').select('*').order('created_at', { ascending: true });
-      if (!error && Array.isArray(data)) { records = data; renderNav(); }
+      if (!db) return;
+      try {
+        const { data, error } = await db.from('records').select('*').order('created_at', { ascending: true });
+        if (!error && Array.isArray(data)) {
+          records = data;
+          renderNav();
+        }
+      } catch (err) {
+        console.error('載入條目失敗：', err);
+      }
     }
 
     function renderNav() {
@@ -561,7 +617,7 @@
       if (rawContent.includes('<') && rawContent.includes('>')) {
         viewContentEl.innerHTML = rawContent;
       } else {
-        viewContentEl.innerHTML = marked.parse(rawContent);
+        viewContentEl.innerHTML = renderMarkdownSafe(rawContent);
       }
       wrapTablesInScrollContainer(viewContentEl);
 
@@ -636,7 +692,7 @@
       if (rawContent.includes('<') && rawContent.includes('>')) {
         richEditor.innerHTML = rawContent;
       } else {
-        richEditor.innerHTML = marked.parse(rawContent);
+        richEditor.innerHTML = renderMarkdownSafe(rawContent);
       }
 
       normalizeEditorBlocks();
@@ -653,6 +709,10 @@
     };
 
     document.getElementById('saveBtn').onclick = async () => {
+      if (!db) {
+        alert('Supabase 尚未載入，無法儲存。');
+        return;
+      }
       clearSelectedTableHighlight();
       normalizeEditorBlocks();
 
@@ -662,32 +722,44 @@
       
       if (!title || richEditor.innerText.trim() === '') { alert('請填寫標題與內容'); return; }
 
-      if (currentId) {
-        const { error } = await db.from('records').update({ title, category, content }).eq('id', currentId);
-        if (error) { alert('更新失敗：' + error.message); return; }
-        const idx = records.findIndex(x => x.id === currentId);
-        if (idx !== -1) records[idx] = { ...records[idx], title, category, content };
-      } else {
-        const { data: { user } } = await db.auth.getUser();
-        const { data, error } = await db.from('records').insert({ user_id: user.id, title, category, content }).select().single();
-        if (error) { alert('新增失敗：' + error.message); return; }
-        records.push(data);
-        currentId = data.id;
+      try {
+        if (currentId) {
+          const { error } = await db.from('records').update({ title, category, content }).eq('id', currentId);
+          if (error) { alert('更新失敗：' + error.message); return; }
+          const idx = records.findIndex(x => x.id === currentId);
+          if (idx !== -1) records[idx] = { ...records[idx], title, category, content };
+        } else {
+          const { data: { user } } = await db.auth.getUser();
+          const { data, error } = await db.from('records').insert({ user_id: user.id, title, category, content }).select().single();
+          if (error) { alert('新增失敗：' + error.message); return; }
+          records.push(data);
+          currentId = data.id;
+        }
+        renderNav();
+        viewRecord(currentId);
+      } catch (err) {
+        alert('儲存時發生錯誤：' + (err?.message || err));
       }
-      renderNav();
-      viewRecord(currentId);
     };
 
     document.getElementById('deleteBtn').onclick = async () => {
+      if (!db) {
+        alert('Supabase 尚未載入，無法刪除。');
+        return;
+      }
       if (!confirm('確定要刪除嗎？')) return;
-      const { error } = await db.from('records').delete().eq('id', currentId);
-      if (error) { alert('刪除失敗：' + error.message); return; }
-      records = records.filter(x => x.id !== currentId);
-      currentId = null;
-      renderNav();
-      viewer.classList.add('hidden');
-      welcomeScreen.classList.remove('hidden');
-      tocContainer.classList.add('hidden');
+      try {
+        const { error } = await db.from('records').delete().eq('id', currentId);
+        if (error) { alert('刪除失敗：' + error.message); return; }
+        records = records.filter(x => x.id !== currentId);
+        currentId = null;
+        renderNav();
+        viewer.classList.add('hidden');
+        welcomeScreen.classList.remove('hidden');
+        tocContainer.classList.add('hidden');
+      } catch (err) {
+        alert('刪除時發生錯誤：' + (err?.message || err));
+      }
     };
 
     const searchInput = document.getElementById('searchInput');
@@ -1045,4 +1117,41 @@
     }
 
     // ==========================================
-    // 初始化與
+    // 初始化與登入狀態監聽
+    // ==========================================
+
+    async function initApp() {
+      if (!db) {
+        showAuth('無法初始化 Supabase 客戶端，請檢查網路連線。');
+        return;
+      }
+
+      try {
+        const { data: { session } } = await db.auth.getSession();
+        if (session) {
+          showMain();
+          await loadRecords();
+        } else {
+          showAuth();
+        }
+      } catch (err) {
+        console.error('初始化 Session 失敗：', err);
+        showAuth();
+      }
+
+      db.auth.onAuthStateChange(async (event, currentSession) => {
+        if (event === 'SIGNED_IN' && currentSession) {
+          showMain();
+          await loadRecords();
+        } else if (event === 'SIGNED_OUT') {
+          currentId = null;
+          records = [];
+          showAuth();
+        }
+      });
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
