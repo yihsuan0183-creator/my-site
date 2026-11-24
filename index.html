@@ -73,7 +73,7 @@
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     
-    /* 表格樣式 (閱讀區) */
+    /* 🔥 表格樣式 (閱讀區) - 絕對強制橫書與換行 */
     .article-body table {
       width: 100%;
       max-width: 100%;
@@ -84,6 +84,7 @@
       text-align: center;
       table-layout: fixed;
       writing-mode: horizontal-tb !important;
+      direction: ltr !important;
     }
     .article-body th, .article-body td {
       border: 1px solid #a2a9b1;
@@ -92,6 +93,8 @@
       word-wrap: break-word;
       white-space: normal;
       writing-mode: horizontal-tb !important;
+      text-orientation: mixed !important;
+      text-align: center;
     }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
@@ -109,7 +112,7 @@
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     
-    /* 編輯器內的表格樣式 */
+    /* 🔥 編輯器內的表格樣式 - 絕對強制橫書與換行 */
     #rich-editor table {
       width: 100%;
       max-width: 100%;
@@ -120,6 +123,7 @@
       text-align: center;
       table-layout: fixed;
       writing-mode: horizontal-tb !important;
+      direction: ltr !important;
     }
     #rich-editor th, #rich-editor td {
       border: 1px solid #a2a9b1;
@@ -128,6 +132,8 @@
       word-wrap: break-word;
       white-space: normal;
       writing-mode: horizontal-tb !important;
+      text-orientation: mixed !important;
+      text-align: center;
     }
     #rich-editor th { background-color: #eaecf0; font-weight: bold; }
     #rich-editor table.selected-table { outline: 2px solid #4e6ef2; }
@@ -501,7 +507,7 @@
     document.getElementById('saveBtn').onclick = async () => {
       clearSelectedTableHighlight();
       
-      // 🔥 儲存前清理所有表格的直書屬性，強制轉為橫書
+      // 🔥 強制清理直書屬性
       const tables = richEditor.querySelectorAll('table');
       tables.forEach(table => {
         table.removeAttribute('style');
@@ -572,29 +578,30 @@
       richEditor.focus();
     }
 
+    // 🔥 修正標題無法插入的問題：直接硬塞空白行
     function formatHeading(tag) {
-      document.execCommand('formatBlock', false, tag);
       let sel = window.getSelection();
-      if (sel.rangeCount > 0) {
-        let node = sel.anchorNode;
-        while (node && node !== richEditor) {
-          if (node.tagName && node.tagName.toLowerCase() === tag) {
-            let nextEl = node.nextElementSibling;
-            if (!nextEl || (nextEl.tagName === 'H2' || nextEl.tagName === 'H3')) {
-              const p = document.createElement('p');
-              p.innerHTML = '<br>';
-              node.after(p);
-              nextEl = p;
-            }
-            const range = document.createRange();
-            range.setStart(nextEl, 0);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            break;
-          }
-          node = node.parentNode;
-        }
+      if (sel.rangeCount === 0) return;
+      
+      let range = sel.getRangeAt(0);
+      
+      // 如果選取的不是折疊的（有選取文字），先不管，直接套用
+      if (!range.collapsed) {
+        document.execCommand('formatBlock', false, tag);
+      } else {
+        // 如果是單一游標，我們手動插入 HTML
+        const p = document.createElement('p');
+        p.innerHTML = '<br>';
+        const h = document.createElement(tag);
+        h.innerHTML = '標題文字'; // 預設文字
+        
+        range.insertNode(p);
+        range.insertNode(h);
+        
+        // 把游標移到標題文字裡面，並全選預設文字，方便直接打字
+        range.selectNodeContents(h);
+        sel.removeAllRanges();
+        sel.addRange(range);
       }
       richEditor.focus();
     }
