@@ -73,22 +73,33 @@
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
     .article-body p { min-height: 1.8em; margin: 8px 0; }
-    
-    /* 表格樣式 (閱讀區) - 固定欄寬並強制換行 */
+
+    /* 表格外層橫向捲動容器 */
+    .table-scroll-wrap {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 18px 0;
+    }
+
+    /* 表格樣式 (閱讀區) - 維持合理欄寬並強制換行 */
     .article-body table {
       display: table;
       width: 100%;
-      max-width: 100%;
-      table-layout: fixed;
+      min-width: 100%;
+      table-layout: auto;
       border-collapse: collapse;
-      margin: 18px 0;
+      margin: 0;
       font-size: 0.95rem;
-      line-height: 1.5;
+      line-height: 1.6;
       text-align: center;
     }
     .article-body th, .article-body td {
       border: 1px solid #a2a9b1;
       padding: 10px 12px;
+      min-width: 110px;
+      max-width: 240px;
       vertical-align: middle;
       white-space: normal;
       word-break: break-word;
@@ -110,26 +121,32 @@
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     #rich-editor p { min-height: 1.8em; margin: 8px 0; }
+    #rich-editor .table-scroll-wrap {
+      margin: 14px 0;
+    }
     #rich-editor table {
       display: table;
       width: 100%;
-      max-width: 100%;
-      table-layout: fixed;
+      min-width: 100%;
+      table-layout: auto;
       border-collapse: collapse;
-      margin: 14px 0;
+      margin: 0;
       font-size: 0.95rem;
-      line-height: 1.5;
+      line-height: 1.6;
       text-align: center;
     }
     #rich-editor th, #rich-editor td {
       border: 1px solid #a2a9b1;
       padding: 8px 10px;
+      min-width: 110px;
+      max-width: 240px;
       vertical-align: middle;
       white-space: normal;
       word-break: break-word;
       overflow-wrap: anywhere;
     }
     #rich-editor th { background-color: #eaecf0; font-weight: bold; }
+    #rich-editor .table-scroll-wrap.selected-table,
     #rich-editor table.selected-table { outline: 2px solid #4e6ef2; }
     #rich-editor h2 { font-size: 1.55rem; margin: 22px 0 12px; display: flex; align-items: center; font-weight: bold; }
     #rich-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
@@ -280,7 +297,7 @@
                 <button type="button" onclick="removeVisualCol()" style="color:#d92626; border-color:#f33;">- 刪一欄</button>
                 <button type="button" onclick="insertVisualTableToContent()" style="background:#28a745; color:#fff; border:none; margin-left: 10px;">✔️ 儲存/插入</button>
               </div>
-              <p class="table-tip">💡 提示：點選文章中的表格後再按「📊 表格編輯器」可直接修改該表格；同一格內若要分行，可用「/」隔開（例如：天下陣解/萬物御）。</p>
+              <p class="table-tip">💡 提示：點選文章中的表格後再按「📊 表格編輯器」可直接修改該表格；同一格內若要分行，可用「/」隔開（例如：天下陣解/萬物御），或超過字數上限會自動換行。</p>
 
               <div class="visual-table-wrap">
                 <table class="visual-table" id="visualTable"></table>
@@ -302,7 +319,8 @@
 
   <script>
     const SUPABASE_URL = 'https://vshfxcygviqsxxnanxzd.supabase.co';
-    const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0'; 
+    const SUPABASE_ANON_KEY = 'sb_publishable_KMI9aX76T4fxrrwOCoErlA_7ybOkPq0';
+    const MAX_CHARS_PER_LINE = 10; // 每一行最多幾個字便換行
 
     const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true }
@@ -339,16 +357,40 @@
         .replace(/"/g, '&quot;');
     }
 
+    function getTableBlock(el) {
+      if (!el) return null;
+      const tbl = el.tagName === 'TABLE' ? el : el.closest('table');
+      if (!tbl || !richEditor.contains(tbl)) return null;
+      return tbl.parentElement?.classList.contains('table-scroll-wrap') ? tbl.parentElement : tbl;
+    }
+
     function clearSelectedTableHighlight() {
-      richEditor.querySelectorAll('table.selected-table').forEach(t => t.classList.remove('selected-table'));
+      richEditor.querySelectorAll('.selected-table').forEach(t => t.classList.remove('selected-table'));
     }
 
     function selectTableInEditor(tableEl) {
       clearSelectedTableHighlight();
-      activeEditorTable = tableEl || null;
-      if (activeEditorTable) {
-        activeEditorTable.classList.add('selected-table');
+      if (!tableEl || !richEditor.contains(tableEl)) {
+        activeEditorTable = null;
+        return;
       }
+      const tbl = tableEl.tagName === 'TABLE' ? tableEl : tableEl.querySelector('table');
+      activeEditorTable = tbl || null;
+      if (activeEditorTable) {
+        const target = getTableBlock(activeEditorTable) || activeEditorTable;
+        target.classList.add('selected-table');
+      }
+    }
+
+    function wrapTablesInScrollContainer(rootEl) {
+      rootEl.querySelectorAll('table').forEach(tbl => {
+        if (!tbl.parentElement?.classList.contains('table-scroll-wrap')) {
+          const wrap = document.createElement('div');
+          wrap.className = 'table-scroll-wrap';
+          tbl.replaceWith(wrap);
+          wrap.appendChild(tbl);
+        }
+      });
     }
 
     function saveSelection() {
@@ -386,6 +428,8 @@
     }
 
     function normalizeEditorBlocks() {
+      wrapTablesInScrollContainer(richEditor);
+
       Array.from(richEditor.childNodes).forEach(node => {
         if (node.nodeType === Node.TEXT_NODE) {
           const text = node.textContent;
@@ -399,7 +443,7 @@
         }
       });
 
-      richEditor.querySelectorAll('h2, h3, table').forEach(el => {
+      richEditor.querySelectorAll('h2, h3, .table-scroll-wrap').forEach(el => {
         if (el.parentNode === richEditor) {
           if (!el.nextElementSibling) {
             ensureParagraphSpacer(el, 'after');
@@ -428,7 +472,6 @@
       saveSelection();
     });
 
-    // 在大標題或小標題尾端按 Enter 時，確保建立可輸入的段落
     richEditor.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         const sel = window.getSelection();
@@ -513,12 +556,14 @@
       document.getElementById('viewCategory').textContent = '分類：' + (r.category || '未分類');
       document.getElementById('viewDate').textContent = r.created_at ? new Date(r.created_at).toLocaleString('zh-TW') : '';
       
+      const viewContentEl = document.getElementById('viewContent');
       const rawContent = r.content || '';
       if (rawContent.includes('<') && rawContent.includes('>')) {
-        document.getElementById('viewContent').innerHTML = rawContent;
+        viewContentEl.innerHTML = rawContent;
       } else {
-        document.getElementById('viewContent').innerHTML = marked.parse(rawContent);
+        viewContentEl.innerHTML = marked.parse(rawContent);
       }
+      wrapTablesInScrollContainer(viewContentEl);
 
       welcomeScreen.classList.add('hidden');
       editor.classList.add('hidden');
@@ -881,13 +926,30 @@
       document.getElementById('tblCols').value = headTr.children.length;
     }
 
+    function splitByMaxChars(text, maxChars = MAX_CHARS_PER_LINE) {
+      const chars = Array.from(text);
+      if (chars.length <= maxChars) return [text];
+      const chunks = [];
+      for (let i = 0; i < chars.length; i += maxChars) {
+        chunks.push(chars.slice(i, i + maxChars).join(''));
+      }
+      return chunks;
+    }
+
     function formatCellText(raw) {
-      const parts = String(raw)
+      const slashParts = String(raw)
         .split('/')
         .map(s => s.trim())
         .filter(Boolean);
-      if (parts.length === 0) return '&nbsp;';
-      return parts.map(escapeHtml).join('<br>');
+      if (slashParts.length === 0) return '&nbsp;';
+
+      const lines = [];
+      slashParts.forEach(part => {
+        splitByMaxChars(part, MAX_CHARS_PER_LINE).forEach(line => {
+          lines.push(escapeHtml(line));
+        });
+      });
+      return lines.join('<br>');
     }
 
     function insertVisualTableToContent() {
@@ -924,22 +986,27 @@
         newTable.appendChild(tbody);
       }
 
+      const wrap = document.createElement('div');
+      wrap.className = 'table-scroll-wrap';
+      wrap.appendChild(newTable);
+
       if (activeEditorTable && richEditor.contains(activeEditorTable)) {
-        activeEditorTable.replaceWith(newTable);
-        ensureParagraphSpacer(newTable, 'after');
+        const oldBlock = getTableBlock(activeEditorTable) || activeEditorTable;
+        oldBlock.replaceWith(wrap);
+        ensureParagraphSpacer(wrap, 'after');
       } else {
         const anchor = findInsertionAnchor();
         if (anchor && anchor.parentNode === richEditor) {
           if (anchor.tagName === 'P' && anchor.textContent.trim() === '') {
-            anchor.replaceWith(newTable);
+            anchor.replaceWith(wrap);
           } else {
-            anchor.insertAdjacentElement('afterend', newTable);
+            anchor.insertAdjacentElement('afterend', wrap);
           }
         } else {
-          richEditor.appendChild(newTable);
+          richEditor.appendChild(wrap);
         }
 
-        const afterP = ensureParagraphSpacer(newTable, 'after');
+        const afterP = ensureParagraphSpacer(wrap, 'after');
         if (afterP) {
           const range = document.createRange();
           range.setStart(afterP, 0);
@@ -965,8 +1032,9 @@
       }
       if (!confirm('確定要刪除這個表格嗎？')) return;
 
-      const nextSibling = activeEditorTable.nextElementSibling;
-      activeEditorTable.remove();
+      const targetBlock = getTableBlock(activeEditorTable) || activeEditorTable;
+      const nextSibling = targetBlock.nextElementSibling;
+      targetBlock.remove();
       activeEditorTable = null;
 
       if (!nextSibling && richEditor.children.length === 0) {
@@ -977,31 +1045,4 @@
     }
 
     // ==========================================
-    // 初始化與登入狀態監聽
-    // ==========================================
-
-    async function initApp() {
-      const { data: { session } } = await db.auth.getSession();
-      if (session) {
-        showMain();
-        await loadRecords();
-      } else {
-        showAuth();
-      }
-
-      db.auth.onAuthStateChange(async (event, currentSession) => {
-        if (event === 'SIGNED_IN' && currentSession) {
-          showMain();
-          await loadRecords();
-        } else if (event === 'SIGNED_OUT') {
-          currentId = null;
-          records = [];
-          showAuth();
-        }
-      });
-    }
-
-    initApp();
-  </script>
-</body>
-</html>
+    // 初始化與
