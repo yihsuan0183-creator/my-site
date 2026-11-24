@@ -72,24 +72,27 @@
     .article-body h2 { font-size: 1.55rem; font-weight: bold; margin: 36px 0 18px; display: flex; align-items: center; }
     .article-body h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
     .article-body h3 { font-size: 1.2rem; font-weight: bold; margin: 28px 0 14px; color: #333; padding-left: 14px; border-left: 2px solid #4e6ef2; }
+    .article-body p { min-height: 1.8em; margin: 8px 0; }
     
-    /* 表格樣式 (閱讀區) */
+    /* 表格樣式 (閱讀區) - 固定欄寬並強制換行 */
     .article-body table {
-      display: block;
+      display: table;
+      width: 100%;
       max-width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      table-layout: fixed;
       border-collapse: collapse;
-      margin: 20px 0;
+      margin: 18px 0;
       font-size: 0.95rem;
       line-height: 1.5;
       text-align: center;
     }
     .article-body th, .article-body td {
       border: 1px solid #a2a9b1;
-      padding: 10px 14px;
+      padding: 10px 12px;
       vertical-align: middle;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
     .article-body th { background-color: #eaecf0; font-weight: bold; }
 
@@ -106,11 +109,12 @@
 
     /* 編輯器本體 */
     #rich-editor { min-height: 320px; background: #fff; border: 1px solid #ccc; border-radius: 0 0 4px 4px; padding: 16px; outline: none; font-size: 1rem; line-height: 1.8; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    #rich-editor p { min-height: 1.8em; margin: 8px 0; }
     #rich-editor table {
-      display: block;
+      display: table;
+      width: 100%;
       max-width: 100%;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      table-layout: fixed;
       border-collapse: collapse;
       margin: 14px 0;
       font-size: 0.95rem;
@@ -119,15 +123,17 @@
     }
     #rich-editor th, #rich-editor td {
       border: 1px solid #a2a9b1;
-      padding: 8px 12px;
+      padding: 8px 10px;
       vertical-align: middle;
-      white-space: nowrap;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
     }
     #rich-editor th { background-color: #eaecf0; font-weight: bold; }
     #rich-editor table.selected-table { outline: 2px solid #4e6ef2; }
-    #rich-editor h2 { font-size: 1.55rem; margin: 20px 0 10px; display: flex; align-items: center; font-weight: bold; }
-    #rich-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; }
-    #rich-editor h3 { font-size: 1.2rem; margin: 15px 0 10px; padding-left: 14px; border-left: 2px solid #4e6ef2; font-weight: bold; }
+    #rich-editor h2 { font-size: 1.55rem; margin: 22px 0 12px; display: flex; align-items: center; font-weight: bold; }
+    #rich-editor h2::before { content: ""; width: 4px; height: 24px; background: #4e6ef2; margin-right: 10px; border-radius: 2px; flex-shrink: 0; }
+    #rich-editor h3 { font-size: 1.2rem; margin: 16px 0 10px; padding-left: 14px; border-left: 2px solid #4e6ef2; font-weight: bold; }
 
     /* 視覺化表格編輯器區塊 */
     #table-editor-section { display: none; background: #fff; border: 1px solid #4e6ef2; border-radius: 4px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(78, 110, 242, 0.15); }
@@ -244,9 +250,9 @@
               <button type="button" onclick="formatDoc('undo')" title="復原 (Ctrl+Z)">↩️ 復原</button>
               <button type="button" onclick="formatDoc('redo')" title="重做 (Ctrl+Y)">↪️ 重做</button>
               <div class="divider"></div>
-              <button type="button" onclick="formatDoc('formatBlock', 'h2')">大標題</button>
-              <button type="button" onclick="formatDoc('formatBlock', 'h3')">小標題</button>
-              <button type="button" onclick="formatDoc('formatBlock', 'p')">內文</button>
+              <button type="button" onclick="applyBlockTag('h2')">大標題</button>
+              <button type="button" onclick="applyBlockTag('h3')">小標題</button>
+              <button type="button" onclick="applyBlockTag('p')">內文</button>
               <div class="divider"></div>
               <button type="button" onclick="formatDoc('bold')"><b>B</b></button>
               <button type="button" onclick="formatDoc('italic')"><i>I</i></button>
@@ -281,7 +287,7 @@
               </div>
             </div>
 
-            <div id="rich-editor" contenteditable="true"></div>
+            <div id="rich-editor" contenteditable="true"><p><br></p></div>
             
             <div style="margin-top: 15px;">
               <button id="saveBtn" class="btn btn-primary">儲存條目</button>
@@ -320,6 +326,7 @@
     let currentId = null;
     let keyword = '';
     let activeEditorTable = null;
+    let savedEditorRange = null;
 
     function showAuth() { authView.classList.remove('hidden'); mainView.classList.add('hidden'); }
     function showMain() { authView.classList.add('hidden'); mainView.classList.remove('hidden'); }
@@ -344,12 +351,113 @@
       }
     }
 
+    function saveSelection() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (richEditor.contains(range.commonAncestorContainer)) {
+        savedEditorRange = range.cloneRange();
+      }
+    }
+
+    function restoreSelection() {
+      if (!savedEditorRange) return false;
+      const sel = window.getSelection();
+      if (!sel) return false;
+      sel.removeAllRanges();
+      sel.addRange(savedEditorRange);
+      return true;
+    }
+
+    function ensureParagraphSpacer(node, position) {
+      if (!node || !node.parentNode) return null;
+      const sibling = position === 'before' ? node.previousElementSibling : node.nextElementSibling;
+      if (sibling && sibling.tagName === 'P') {
+        return sibling;
+      }
+      const p = document.createElement('p');
+      p.innerHTML = '<br>';
+      if (position === 'before') {
+        node.parentNode.insertBefore(p, node);
+      } else {
+        node.parentNode.insertBefore(p, node.nextSibling);
+      }
+      return p;
+    }
+
+    function normalizeEditorBlocks() {
+      Array.from(richEditor.childNodes).forEach(node => {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent;
+          if (text.trim() !== '') {
+            const p = document.createElement('p');
+            p.textContent = text;
+            node.replaceWith(p);
+          } else {
+            node.remove();
+          }
+        }
+      });
+
+      richEditor.querySelectorAll('h2, h3, table').forEach(el => {
+        if (el.parentNode === richEditor) {
+          if (!el.nextElementSibling) {
+            ensureParagraphSpacer(el, 'after');
+          }
+        }
+      });
+
+      if (richEditor.children.length === 0) {
+        richEditor.innerHTML = '<p><br></p>';
+      }
+    }
+
     richEditor.addEventListener('click', (e) => {
       const tbl = e.target.closest('table');
       if (tbl && richEditor.contains(tbl)) {
         selectTableInEditor(tbl);
       } else {
         selectTableInEditor(null);
+      }
+      saveSelection();
+    });
+
+    richEditor.addEventListener('keyup', saveSelection);
+    richEditor.addEventListener('mouseup', saveSelection);
+    richEditor.addEventListener('input', () => {
+      saveSelection();
+    });
+
+    // 在大標題或小標題尾端按 Enter 時，確保建立可輸入的段落
+    richEditor.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        const heading = range.startContainer.nodeType === Node.ELEMENT_NODE
+          ? range.startContainer.closest('h2, h3')
+          : range.startContainer.parentElement?.closest('h2, h3');
+
+        if (heading && richEditor.contains(heading)) {
+          const isAtEnd = range.collapsed &&
+            range.startOffset === (range.startContainer.nodeType === Node.TEXT_NODE
+              ? range.startContainer.textContent.length
+              : range.startContainer.childNodes.length);
+
+          if (isAtEnd) {
+            e.preventDefault();
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            heading.insertAdjacentElement('afterend', p);
+
+            const newRange = document.createRange();
+            newRange.setStart(p, 0);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            saveSelection();
+          }
+        }
       }
     });
 
@@ -457,6 +565,7 @@
 
     document.getElementById('newEntryBtn').onclick = () => {
       currentId = null;
+      savedEditorRange = null;
       selectTableInEditor(null);
       document.getElementById('editorTitle').textContent = '建立新條目';
       document.getElementById('editTitle').value = '';
@@ -472,6 +581,7 @@
     document.getElementById('editBtn').onclick = () => {
       const r = records.find(x => x.id === currentId);
       if (!r) return;
+      savedEditorRange = null;
       selectTableInEditor(null);
       document.getElementById('editorTitle').textContent = '編輯條目：' + r.title;
       document.getElementById('editTitle').value = r.title;
@@ -483,6 +593,8 @@
       } else {
         richEditor.innerHTML = marked.parse(rawContent);
       }
+
+      normalizeEditorBlocks();
       
       closeTableEditor();
       viewer.classList.add('hidden');
@@ -497,6 +609,8 @@
 
     document.getElementById('saveBtn').onclick = async () => {
       clearSelectedTableHighlight();
+      normalizeEditorBlocks();
+
       const title = document.getElementById('editTitle').value.trim();
       const category = document.getElementById('editCategory').value;
       const content = richEditor.innerHTML;
@@ -550,8 +664,63 @@
     });
 
     function formatDoc(cmd, value = null) {
-      document.execCommand(cmd, false, value);
       richEditor.focus();
+      restoreSelection();
+      document.execCommand(cmd, false, value);
+      saveSelection();
+    }
+
+    function applyBlockTag(tagName) {
+      richEditor.focus();
+      restoreSelection();
+      document.execCommand('formatBlock', false, tagName.toUpperCase());
+
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const node = sel.getRangeAt(0).startContainer;
+        const el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+        const block = el?.closest('h2, h3, p');
+        if (block && richEditor.contains(block)) {
+          ensureParagraphSpacer(block, 'after');
+        }
+      }
+      saveSelection();
+    }
+
+    function findInsertionAnchor() {
+      restoreSelection();
+      const sel = window.getSelection();
+      let targetNode = null;
+
+      if (sel && sel.rangeCount > 0) {
+        const range = sel.getRangeAt(0);
+        if (richEditor.contains(range.commonAncestorContainer)) {
+          let cur = range.startContainer.nodeType === Node.ELEMENT_NODE
+            ? range.startContainer
+            : range.startContainer.parentElement;
+
+          while (cur && cur.parentNode !== richEditor) {
+            cur = cur.parentNode;
+          }
+          if (cur && cur.parentNode === richEditor) {
+            targetNode = cur;
+          }
+        }
+      }
+
+      if (!targetNode && savedEditorRange && richEditor.contains(savedEditorRange.commonAncestorContainer)) {
+        let cur = savedEditorRange.startContainer.nodeType === Node.ELEMENT_NODE
+          ? savedEditorRange.startContainer
+          : savedEditorRange.startContainer.parentElement;
+        while (cur && cur.parentNode !== richEditor) {
+          cur = cur.parentNode;
+        }
+        if (cur && cur.parentNode === richEditor) {
+          targetNode = cur;
+        }
+      }
+
+      return targetNode;
     }
 
     // ==========================================
@@ -606,6 +775,7 @@
     }
 
     function openTableEditor() {
+      saveSelection();
       tableEditorSection.style.display = 'block';
       const label = document.getElementById('tableEditorModeLabel');
       if (activeEditorTable && richEditor.contains(activeEditorTable)) {
@@ -756,24 +926,31 @@
 
       if (activeEditorTable && richEditor.contains(activeEditorTable)) {
         activeEditorTable.replaceWith(newTable);
+        ensureParagraphSpacer(newTable, 'after');
       } else {
-        const sel = window.getSelection();
-        let inserted = false;
-        if (sel && sel.rangeCount > 0) {
-          const range = sel.getRangeAt(0);
-          if (richEditor.contains(range.commonAncestorContainer)) {
-            range.deleteContents();
-            range.insertNode(newTable);
-            inserted = true;
+        const anchor = findInsertionAnchor();
+        if (anchor && anchor.parentNode === richEditor) {
+          if (anchor.tagName === 'P' && anchor.textContent.trim() === '') {
+            anchor.replaceWith(newTable);
+          } else {
+            anchor.insertAdjacentElement('afterend', newTable);
           }
-        }
-        if (!inserted) {
+        } else {
           richEditor.appendChild(newTable);
         }
 
-        const afterP = document.createElement('p');
-        afterP.innerHTML = '<br>';
-        newTable.after(afterP);
+        const afterP = ensureParagraphSpacer(newTable, 'after');
+        if (afterP) {
+          const range = document.createRange();
+          range.setStart(afterP, 0);
+          range.collapse(true);
+          const sel = window.getSelection();
+          if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+          savedEditorRange = range.cloneRange();
+        }
       }
 
       selectTableInEditor(newTable);
@@ -792,7 +969,7 @@
       activeEditorTable.remove();
       activeEditorTable = null;
 
-      if (!nextSibling && richEditor.childNodes.length === 0) {
+      if (!nextSibling && richEditor.children.length === 0) {
         richEditor.innerHTML = '<p><br></p>';
       }
       closeTableEditor();
